@@ -1,33 +1,43 @@
-# Le Dernier Royaume · V2.0.0
+# Courvane · V6.0.0
 
-**L’Aube de Valdor** transforme la défense de village en première aventure d’exploration et de reconstruction. Le roi a perdu une guerre : trouvez des survivants dans une forêt ouverte, ramenez-les au refuge et rebâtissez votre civilisation entre des assauts espacés. Voir [DESIGN-V2.md](DESIGN-V2.md) pour les règles complètes.
+**Bâtissez votre héritage.** Après la chute de Valdor, personnalisez votre souverain, retrouvez son peuple, attribuez ses métiers et reconstruisez un royaume en 3D. La V6 ajoute l’économie, l’expérience, les salaires, les recherches et le placement libre aux bases d’exploration de la V2.
 
-## Jouer immédiatement sur PC Windows
+## Jouer sur PC
 
-Télécharger **Royaume-PC-V2.zip**, choisir **Extraire tout**, ouvrir le dossier `Royaume-PC` puis double-cliquer sur **LANCER-JEU.bat**. On peut aussi ouvrir directement `jeu-pc.html` avec Edge, Chrome ou Firefox récent, compatible WebGL 2. Aucun serveur, installation ou connexion n’est nécessaire après le téléchargement : le moteur 3D, les modèles et les textures sont inclus.
+1. Télécharger **Courvane-PC-V6.zip** et choisir **Extraire tout**.
+2. Ouvrir le dossier **Courvane-PC**.
+3. Double-cliquer sur **LANCER-JEU.bat**, ou ouvrir `jeu-pc.html` avec Edge, Chrome ou Firefox récent.
 
-La V1 reste conservée dans `Royaume-PC-V1.zip` et dans le tag Git `v1.0.0`. `Royaume-PC.zip` désigne la version courante ; `VERSION.txt` identifie la version dans le paquet.
+WebGL 2 et accélération graphique nécessaires. Le jeu et le moteur sont intégrés dans le fichier : aucun serveur ni connexion n’est nécessaire après le téléchargement. Le jeu occupe toute la fenêtre ; le plein écran du navigateur se choisit dans Options.
+
+Au lancement, choisissez le nom, le teint, les cheveux, la barbe, la cape et la couronne du roi. L’aperçu 3D réagit immédiatement.
 
 ## Commandes
 
-- **ZQSD / WASD / flèches** : se déplacer ; les tirs sont automatiques.
-- **E** : monter/descendre du cheval, secourir un survivant ou fouiller des vestiges, selon ce qui est proche.
-- **M / Échap / Espace** : ouvrir ou fermer le menu et mettre en pause.
-- Sur mobile : joystick et bouton d’interaction contextuel, menu en haut à droite.
+| Action | PC | Mobile |
+| --- | --- | --- |
+| Déplacement | ZQSD, WASD ou flèches | Joystick |
+| Monter, descendre, secourir, fouiller | E | Bouton contextuel |
+| Arc / hache | 1 / 2 | Boutons d’arme |
+| Frapper ou couper | F avec la hache | Bouton Frapper / couper |
+| Conseil du royaume, pause | M, Échap ou Espace | Bouton Royaume |
+| Catalogue de construction | B | Onglet Construction |
+| Placer un ouvrage | Choisir le terrain, puis Placer ou Entrée | Toucher le terrain, puis Placer |
+| Rotation / annulation du plan | R / Échap | Boutons Tourner / Annuler |
 
-Le terrain occupe toute la fenêtre, en portrait ou paysage. Le menu rassemble la gestion du royaume, la carte des zones explorées, l’histoire et les options. Le véritable mode plein écran du navigateur est disponible dans **Options** lorsque le navigateur l’autorise ; Safari sur iPhone peut utiliser l’ajout à l’écran d’accueil. Le menu suspend les attaques, le déplacement et les délais d’arrivée.
+## Première partie
 
-## Progression
+Explorez les camps pendant les accalmies et ramenez un survivant. Dans **Habitants**, choisissez son métier : il n’en reçoit aucun automatiquement. Un constructeur peut commencer une maison ou une ferme ; un ouvrier apporte les matières ; un fermier travaille dans une ferme terminée. Préparez des chevaliers avant les assauts annoncés et une forge pour leur armement.
 
-Le cheval attend près du refuge et double la vitesse de déplacement. Les survivants doivent être trouvés pendant les accalmies et escortés chez eux. Les vestiges financent les reconstructions et les recrutements. Les assauts sont annoncés 25 secondes à l’avance et séparés par des périodes de calme de 90 à 170 secondes (120 secondes avant le premier).
+Les places proviennent seulement des logements achevés. Les engagements et voyageurs en route comptent dans les réservations. Les origines visent toujours 20 % d’arrivées spontanées, 30 % d’engagements et 50 % de secours. Une fois les camps initiaux explorés, de nouveaux réfugiés peuvent réapparaître sous conditions de place et de délai.
 
-Les tranches de dix habitants réservent **2 arrivées spontanées, 3 engagements payants et 5 secours en forêt**. Ces proportions cibles de **20 % / 30 % / 50 %** sont détaillées dans le menu. Un premier sauvetage est nécessaire pour commencer les autres modes de recrutement. Deux reconstructions font passer la capacité de 10 à 20 puis 30 habitants ; quinze camps permettent de remplir la part des survivants. Des bâtisseurs produisent lentement des pièces, et les archers défendent le refuge.
+Les habitants, le roi et le royaume ont chacun une progression en XP et en niveaux. À partir du niveau 3 du royaume ou de dix habitants, les travailleurs attendent un salaire toutes les minutes de jeu actif. Le menu affiche coûts, motivation, efficacité, réserves alimentaires et alertes. Les inventeurs se débloquent au niveau 4 avec une académie, puis produisent du savoir et développent les technologies.
 
-La V2 couvre une région et les premières étapes de reconstruction. La reconquête des royaumes ennemis n’est pas encore jouable. La partie reste en mémoire uniquement : aucune sauvegarde entre sessions.
+Les mécanismes, coûts, remboursements et limites sont détaillés dans [DESIGN-V6.md](DESIGN-V6.md). La disponibilité du nouveau nom est documentée dans [NAME-RESEARCH.md](NAME-RESEARCH.md) : aucune occurrence trouvée dans la recherche GitHub accessible, mais les catalogues de jeux ont été bloqués par le réseau. L’exclusivité du nom n’est pas affirmée.
 
 ## Développement
 
-Node.js 24, Python 3 pour le ZIP :
+Node.js 24 et Python 3 pour construire le paquet PC :
 
 ```sh
 npm ci
@@ -35,15 +45,20 @@ npm run build:pc
 npm start
 ```
 
-Port 3000 par défaut ; utiliser `PORT=3200 npm start` si occupé. Chaque tâche cloud est déjà isolée : utiliser le dépôt existant, sans créer de worktree sauf demande explicite.
+Port 3000 par défaut ; `PORT=3200 npm start` permet un autre port. Chaque tâche cloud est isolée : utiliser le dépôt existant, sans créer de worktree sauf demande explicite.
 
-- `simulation.js` : règles et progression, testables sans navigateur.
-- `world-data.js` : limites de la région, camps, lieux et forêt déterministe, index spatial des collisions.
-- `world3d.js` : scène Three.js, modèles, animation, secteurs de forêt et niveaux de détail.
-- `game.js` : commandes, menus, affichage et boucle principale.
-- `painted-textures.js` : textures peintes générées localement.
+- `simulation.js` : règles et progression indépendantes du navigateur.
+- `kingdom-data.js` : métiers, ouvrages, recherches et coûts.
+- `world-data.js` : région, camps, lieux, forêt et index spatial.
+- `world3d.js` : scène, caméra, animation, secteurs et niveaux de détail.
+- `royal-models.js` : modèles royaux, métiers et constructions.
+- `painted-textures.js` : textures originales générées localement.
+- `game.js`, `index.html`, `style.css` : interface, personnalisation, commandes et placement.
+- `brand.js` : nom et version du jeu.
 
-`npm run build` assemble ces modules avec Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le HTML autonome et le ZIP versionné. Les sorties sont conservées dans Git pour permettre un téléchargement et un hébergement statique immédiats. La licence de Three.js est incluse dans le paquet.
+`npm run build` assemble ces modules et Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le document autonome et `Courvane-PC-V6.zip`. `Courvane-PC.zip` et `Royaume-PC.zip` sont des alias de la version courante. Les archives V1/V2 et leurs tags sont conservés. La numérotation passe directement de V2 à V6 à la demande du joueur.
+
+Les modèles sont des créations procédurales originales inspirées des images transmises, sans reprise de leurs fichiers ni de leurs filigranes. Les parties statiques sont regroupées avec couleurs de sommets, les arbres instanciés par secteurs et niveaux de détail. La licence de Three.js est incluse dans l’archive.
 
 ## Vérifications
 
@@ -53,12 +68,16 @@ npm run test:browser
 npm run test:pc
 ```
 
-Les tests de simulation couvrent notamment la vitesse montée, les escortes, les quotas des trois origines, les arrivées autonomes, les reconstructions, les collisions et les attaques intermittentes. Les tests navigateur vérifient l’interface plein écran sur neuf formats, le prologue, les menus, les commandes tactiles et clavier, le cheval, la progression, la caméra et le redémarrage. Les accès à l’état sont injectés seulement dans les réponses de test.
+Les tests couvrent les anciennes mécaniques (cheval, exploration, escortes, assauts), puis la hache, la capacité, les réservations, les six métiers, la construction, les améliorations, les ressources, les salaires, les niveaux et les recherches. Les tests navigateur exercent le formulaire, les menus, les choix de métiers, les emplacements réels sur le terrain, les boutons tactiles et les neuf formats d’écran.
 
-Le test PC extrait le ZIP, vérifie sa version et le script livré, puis exerce le document en mode hors réseau. La politique du navigateur cloud bloque `file://` et `data:` : les essais utilisent `page.setContent`. Le batch et le double-clic doivent encore être confirmés sur Windows réel. Les essais matériels iPhone restent nécessaires pour le rendu et les performances.
+Le test PC extrait le ZIP dans un chemin contenant des espaces, vérifie sa version et le script exact, puis exerce l’édition en mode hors réseau. La politique du navigateur cloud bloque `file://` et `data:` : le document extrait est testé via `page.setContent`. Le batch et le double-clic Windows doivent encore être confirmés sur un appareil réel. Les essais matériels iPhone restent également nécessaires. Les entrées sont dimensionnées pour le toucher ; sur mobile, leurs caractères restent à 16 px pour éviter le zoom automatique de Safari.
 
-Chromium est détecté dans `/usr/bin/chromium`, ou via `CHROMIUM_PATH`. Sinon, utiliser `npx playwright install chromium`. WebKit peut être utilisé avec `BROWSER=webkit npm run test:browser` après installation de son navigateur et de ses bibliothèques ; le test CDP de gestes bruts y sera explicitement ignoré. Les domaines de téléchargement WebKit sont bloqués dans cet environnement cloud.
+Chromium est détecté dans `/usr/bin/chromium`, ou via `CHROMIUM_PATH`. Sinon : `npx playwright install chromium`. WebKit est utilisable après installation avec `BROWSER=webkit npm run test:browser`, mais n’a pas pu être téléchargé ici. Les accès internes utilisés par les tests sont injectés dans leurs seules réponses et ne sont pas livrés au joueur.
 
-## GitHub Pages
+## Hébergement
 
-Servir `index.html`, `style.css` et `game.bundle.js`, avec leurs chemins relatifs. Dans **Settings → Pages**, choisir **Deploy from a branch**, la branche voulue et **/(root)**. L’hébergement de dépôts privés dépend de l’offre GitHub ; ne pas rendre le dépôt public sans autorisation. Les polices Google de la version web sont facultatives et retirées de l’édition PC hors ligne.
+Pour GitHub Pages, servir `index.html`, `style.css` et `game.bundle.js`, avec leurs chemins relatifs. Les polices Google de la version web sont facultatives et retirées de l’édition PC. Aucun secret n’est requis. Ne pas rendre un dépôt privé public sans autorisation.
+
+## Limites actuelles
+
+La sauvegarde entre sessions et la reconquête territoriale ne sont pas encore disponibles. Les inventions utilisent un premier arbre de trois technologies définies. Les essais sur matériel Windows/iPhone et la disponibilité du nom dans les catalogues de jeux restent à confirmer.

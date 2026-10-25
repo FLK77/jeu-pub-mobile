@@ -57,6 +57,14 @@ export function createPaintedTextures(renderer) {
         c.strokeStyle='#a66c484d';c.lineWidth=1;
         for(let i=0;i<4;i++){c.beginPath();c.moveTo(x+10+i*11,y+19);c.lineTo(x+8+i*11,y+47);c.stroke();}
       }
+    } else if(kind==='slate') {
+      fill('#d9e4ee');
+      for(let row=0;row<5;row++)for(let col=-1;col<6;col++){
+        const x=col*52+(row%2)*26,y=row*52,grad=c.createLinearGradient(0,y,0,y+52);
+        grad.addColorStop(0,'#687e96');grad.addColorStop(.15,'#e4eff6');grad.addColorStop(.8,'#b4c8d9');grad.addColorStop(1,'#60778e');
+        c.fillStyle=grad;c.beginPath();c.moveTo(x+2,y+2);c.lineTo(x+50,y+2);c.lineTo(x+48,y+43);c.quadraticCurveTo(x+26,y+55,x+4,y+43);c.closePath();c.fill();
+        c.strokeStyle='#f4f9fd9c';c.lineWidth=2;c.beginPath();c.moveTo(x+7,y+8);c.lineTo(x+43,y+8);c.stroke();
+      }
     } else if(kind==='plaster') {
       fill('#f5edd5');
       for(let i=0;i<100;i++)dab(random()*256,random()*256,3+random()*15,2+random()*7,'#d6bf8a1c');

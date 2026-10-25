@@ -1,19 +1,25 @@
-LE DERNIER ROYAUME - V2.0.0 - PC 3D
+COURVANE - V6.0.0 - PC 3D
 
-1. Extraire tout le fichier Royaume-PC.zip.
-2. Ouvrir le dossier Royaume-PC.
+1. Extraire tout le ZIP Courvane-PC-V6.zip.
+2. Ouvrir le dossier Courvane-PC.
 3. Double-cliquer sur LANCER-JEU.bat.
 
-Autre possibilite : double-cliquer directement sur jeu-pc.html.
-Utiliser Edge, Chrome ou Firefox recent avec WebGL 2. Aucune installation requise.
-La version PC fonctionne hors ligne, sans serveur ni GitHub Pages.
+Vous pouvez aussi ouvrir directement jeu-pc.html avec Edge, Chrome ou Firefox recent.
+WebGL 2 et acceleration graphique necessaires. Aucun serveur ni connexion requis.
+
+AU LANCEMENT
+Personnalisez le nom, le teint, la barbe, les cheveux, la cape et la couronne.
+Les nouveaux habitants attendent votre choix de metier dans Habitants.
+Les constructeurs realisent les plans places sur le terrain.
+Seules les maisons achevees augmentent la capacite.
 
 COMMANDES
-ZQSD, WASD ou fleches : deplacer le roi.
-Tirs automatiques. Approcher les pieces pour les ramasser.
-Menu Royaume : reconstruire, engager des archers et ameliorer l arc.
-M, Echap ou Espace : menu et pause.
-E : monter, descendre, secourir ou fouiller les vestiges.
-Son facultatif avec le bouton SON.
+ZQSD / WASD / fleches : deplacement.
+E : monter, descendre, secourir ou fouiller.
+1 : arc automatique. 2 : hache. F : couper ou frapper.
+M / Echap / Espace : menu et pause.
+B : catalogue de construction. R : tourner le plan. Entree : placer. Echap : annuler.
+Sur mobile : joystick, boutons d armes, interaction et confirmation de placement.
 
-Prototype : la partie n est pas sauvegardee a la fermeture.
+Les salaires deviennent necessaires au niveau 3 du royaume ou a 10 habitants.
+La partie n est pas encore sauvegardee a la fermeture.

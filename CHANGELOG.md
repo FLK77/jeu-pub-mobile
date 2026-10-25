@@ -1,5 +1,21 @@
 # Historique
 
+## V6.0.0 — Courvane
+
+La numérotation passe directement de V2 à V6 à la demande du joueur.
+
+- Nouveau nom et direction artistique royale : toits bleus, tours, fourrure, barbe, gemmes et couronnes.
+- Personnalisation du roi au lancement avec aperçu 3D.
+- Arc et hache utilisable pour le combat et l’abattage.
+- Population limitée aux logements achevés ; arrivées en route réservées et nouveaux habitants sans métier automatique.
+- Six métiers choisis par le roi : ouvrier, constructeur, chevalier, fermier, armurier et inventeur tardif.
+- Ressources, armes/ravitaillement, XP et niveaux séparés pour roi, royaume et habitants.
+- Salaires périodiques, motivation, efficacité, nourriture et commerce des trésoreries.
+- Placement libre des maisons, remparts, fermes, forges, trésoreries et académies ; rotation, chantiers, améliorations et retrait.
+- Trois recherches fonctionnelles et conseil de gestion réunissant les indicateurs essentiels.
+- Nouveaux réfugiés après exploration des camps initiaux, avec délais et contrôles de capacité.
+- Paquet PC hors ligne Courvane-PC-V6.zip ; archives V1 et V2 conservées.
+
 ## V2.0.0 — L’Aube de Valdor
 
 - Terrain sur toute la fenêtre ; gestion, carte, histoire et options dans un menu avec pause.
