@@ -2,10 +2,13 @@
 from pathlib import Path
 import re
 from zipfile import ZipFile, ZIP_DEFLATED
+import json
+import shutil
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / 'pc'
 OUTPUT.mkdir(exist_ok=True)
+VERSION=json.loads((ROOT / 'package.json').read_text())['version']
 
 html = (ROOT / 'index.html').read_text(encoding='utf-8')
 css = (ROOT / 'style.css').read_text(encoding='utf-8')
@@ -28,7 +31,7 @@ if re.search(r'<(?:script|link)\b[^>]*(?:src|href)=', html):
     b'start "" "%~dp0jeu-pc.html"\r\n'
 )
 (OUTPUT / 'LIRE-MOI.txt').write_text(
-    'LE DERNIER ROYAUME - VERSION PC 3D\n\n'
+    f'LE DERNIER ROYAUME - V{VERSION} - PC 3D\n\n'
     '1. Extraire tout le fichier Royaume-PC.zip.\n'
     '2. Ouvrir le dossier Royaume-PC.\n'
     '3. Double-cliquer sur LANCER-JEU.bat.\n\n'
@@ -44,8 +47,10 @@ if re.search(r'<(?:script|link)\b[^>]*(?:src|href)=', html):
     'Prototype : la partie n est pas sauvegardee a la fermeture.\n',
     encoding='utf-8',
 )
+(OUTPUT / 'VERSION.txt').write_text(f'Le Dernier Royaume - V{VERSION}\n',encoding='utf-8')
 (OUTPUT / 'THIRD-PARTY-NOTICES.txt').write_bytes((ROOT / 'THIRD-PARTY-NOTICES.txt').read_bytes())
 with ZipFile(ROOT / 'Royaume-PC.zip', 'w', compression=ZIP_DEFLATED) as archive:
-    for name in ['LANCER-JEU.bat', 'jeu-pc.html', 'LIRE-MOI.txt', 'THIRD-PARTY-NOTICES.txt']:
+    for name in ['LANCER-JEU.bat', 'jeu-pc.html', 'LIRE-MOI.txt', 'THIRD-PARTY-NOTICES.txt', 'VERSION.txt']:
         archive.write(OUTPUT / name, 'Royaume-PC/' + name)
-print('Built Royaume-PC.zip: extract all, then double-click LANCER-JEU.bat')
+shutil.copyfile(ROOT / 'Royaume-PC.zip', ROOT / f"Royaume-PC-V{VERSION.split('.')[0]}.zip")
+print('Built Royaume-PC-V1.zip and Royaume-PC.zip: extract all, then double-click LANCER-JEU.bat')

@@ -15,6 +15,7 @@ test('downloadable ZIP contains a self-contained game playable offline, without 
   try{
     execFileSync('python3',['-c','import sys, zipfile; z=zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None; z.extractall(sys.argv[2])',path.join(root,'Royaume-PC.zip'),temp]);
     const folder=path.join(temp,'Royaume-PC');
+    assert.equal((await fs.readFile(path.join(folder,'VERSION.txt'),'utf8')).trim(),'Le Dernier Royaume - V1.0.0');
     const batch=await fs.readFile(path.join(folder,'LANCER-JEU.bat'),'utf8');
     assert.ok(batch.includes('start "" "%~dp0jeu-pc.html"'));
     const launch={headless:true,args:['--no-sandbox']};

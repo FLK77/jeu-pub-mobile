@@ -163,7 +163,9 @@ test('touch purchases and restart work; combat still yields collectible gold',as
 test('PC controls work and Space on a shop button buys instead of pausing',async t=>{
   const page=await open(t,{width:1280,height:900,mobile:false});
   const before=await page.evaluate(()=>__gameTest.state.king.x);
-  await page.keyboard.down('ArrowRight');await page.waitForTimeout(200);await page.keyboard.up('ArrowRight');
+  await page.keyboard.down('ArrowRight');
+  await page.waitForFunction(x=>__gameTest.state.king.x>x+10,before);
+  await page.keyboard.up('ArrowRight');
   assert.ok(await page.evaluate(()=>__gameTest.state.king.x)>before+10);
   await page.keyboard.press('Space');assert.equal(await page.evaluate(()=>__gameTest.paused),true);
   await page.keyboard.press('Space');assert.equal(await page.evaluate(()=>__gameTest.paused),false);
@@ -191,4 +193,25 @@ test('3D scene renders actors, projectiles, coins and visible fortifications; re
   assert.deepEqual([populated.actors,populated.coins,populated.arrows,populated.fortified],[3,1,1,true]);
   const empty=await page.evaluate(()=>{__gameTest.reset();__gameTest.draw();return __gameTest.view.diagnostics();});
   assert.deepEqual([empty.actors,empty.coins,empty.arrows,empty.fortified],[1,0,0,false]);
+});
+
+
+test('V1: painted materials, compact king proportions and a steady paused image',async t=>{
+  const page=await open(t,{width:1280,height:900,mobile:false});
+  await page.locator('#pause').click();
+  const result=await page.evaluate(()=>{
+    const d=__gameTest.view.diagnostics(),hashes=[];
+    for(let frame=0;frame<4;frame++){
+      __gameTest.draw();
+      const c=document.getElementById('game'),gl=c.getContext('webgl2');
+      const pixels=new Uint8Array(c.width*c.height*4);gl.readPixels(0,0,c.width,c.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+      let hash=2166136261,visible=0;
+      for(let i=0;i<pixels.length;i+=4){hash=Math.imul(hash^pixels[i],16777619);hash=Math.imul(hash^pixels[i+1],16777619);hash=Math.imul(hash^pixels[i+2],16777619);if(pixels[i]+pixels[i+1]+pixels[i+2]>30)visible++;}
+      hashes.push(hash);if(visible<1000)throw Error('blank frame');
+    }
+    return{...d,hashes};
+  });
+  assert.ok(result.paintedTextures>=7,'painted ground, roof, wood, plaster, stone and cloth maps are used');
+  assert.ok(result.kingBodyDepth<result.kingBodyWidth,'king torso is not stretched in depth');
+  assert.equal(new Set(result.hashes).size,1,'static scene has no intermittent pixel changes');
 });

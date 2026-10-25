@@ -1,4 +1,4 @@
-LE DERNIER ROYAUME - VERSION PC 3D
+LE DERNIER ROYAUME - V1.0.0 - PC 3D
 
 1. Extraire tout le fichier Royaume-PC.zip.
 2. Ouvrir le dossier Royaume-PC.
