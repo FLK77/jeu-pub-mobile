@@ -1,1 +1,14 @@
-{"name":"le-dernier-royaume","version":"0.1.0","private":true,"type":"module","scripts":{"start":"node server.js","test":"node --test"}}
+{
+  "name": "le-dernier-royaume",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/server.test.js",
+    "test:browser": "node --test tests/mobile.browser.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

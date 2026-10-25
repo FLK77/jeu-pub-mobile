@@ -1,1 +1,49 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#172e27"><title>Le Dernier Royaume</title><link rel="stylesheet" href="./style.css"></head><body><main><header><a class="brand" href="./">♛ <span>LE DERNIER<small>ROYAUME</small></span></a><span class="edition">DÉFENSE DU VILLAGE · PROTOTYPE</span><button id="pause" aria-label="Mettre en pause">Ⅱ</button></header><section class="heading"><div><span class="eyebrow">VOTRE COURONNE. VOTRE COMBAT.</span><h1>Un roi. Tout un royaume.</h1><p>Défendez votre foyer, rassemblez votre armée.</p></div><div class="wallet"><span>✦</span><div><small>VOTRE TRÉSOR</small><strong id="gold">0</strong></div></div></section><section class="arena"><canvas id="game" aria-label="Jeu de défense du village. Déplacez le roi au clavier ou avec le joystick tactile."></canvas><div class="topline"><div class="wave"><span class="live"></span><span id="wave">VAGUE 1</span></div><div class="health"><span>⌂ <b id="hp">100 / 100</b></span><div><i id="healthbar"></i></div></div><div id="army">♟ 0 ARCHER</div></div><div id="notice">Protégez votre maison !</div><div class="hint">DÉPLACEZ-VOUS · LE ROI TIRE AUTOMATIQUEMENT</div><div id="stick"><div id="knob"></div></div><button id="sound" title="Activer le son">SON : OFF</button><div id="overlay" hidden><span>♛</span><h2>Le royaume est tombé</h2><p id="result"></p><button id="restart">Reprendre la couronne ↗</button></div></section><section class="shop"><button id="recruit"><span class="icon">♟</span><span><strong>Recruter un archer</strong><small>Un allié pour votre défense</small></span><b id="recruitCost">✦ 20</b></button><button id="fortify"><span class="icon">⌂</span><span><strong>Renforcer la maison</strong><small>Répare et ajoute 40 PV max.</small></span><b id="fortifyCost">✦ 30</b></button><button id="upgrade"><span class="icon">➶</span><span><strong>Améliorer l’arc</strong><small>Des flèches plus puissantes</small></span><b id="upgradeCost">✦ 25</b></button></section><footer><span><i></i> Déplacez le roi pour ramasser les pièces</span><span>CLAVIER : ZQSD / WASD / FLÈCHES <b>·</b> MOBILE : JOYSTICK</span></footer></main><script type="module" src="./game.js"></script></body></html>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#172e27">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mon Royaume">
+  <title>Le Dernier Royaume</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<main>
+  <header>
+    <a class="brand" href="./">♛ <span>LE DERNIER<small>ROYAUME</small></span></a>
+    <span class="edition">DÉFENSE DU VILLAGE · PROTOTYPE</span>
+    <button id="pause" type="button" aria-label="Mettre en pause" aria-pressed="false"><span class="pause-symbol" aria-hidden="true"></span></button>
+  </header>
+  <section class="heading" aria-label="Votre royaume">
+    <div><span class="eyebrow">VOTRE COURONNE. VOTRE COMBAT.</span><h1>Un roi. Tout un royaume.</h1><p>Défendez votre foyer, rassemblez votre armée.</p></div>
+    <div class="wallet"><span aria-hidden="true">✦</span><div><small>VOTRE TRÉSOR</small><strong id="gold" aria-label="Pièces disponibles">0</strong></div></div>
+  </section>
+  <section class="arena" aria-label="Terrain de jeu">
+    <canvas id="game" aria-label="Défendez la maison. Déplacez le roi avec le joystick tactile, ZQSD, WASD ou les flèches. Les tirs sont automatiques."></canvas>
+    <div class="topline">
+      <div class="wave"><span class="live"></span><span id="wave">VAGUE 1</span></div>
+      <div class="health"><span>⌂ <b id="hp">100 / 100</b></span><div><i id="healthbar"></i></div></div>
+      <div id="army">♟ 0 ARCHER</div>
+    </div>
+    <div id="notice" role="status">Protégez votre maison !</div>
+    <div class="hint">DÉPLACEZ-VOUS · TIRS AUTOMATIQUES</div>
+    <div id="stick" role="group" aria-label="Joystick : maintenez et glissez pour déplacer le roi"><div id="knob"></div></div>
+    <button id="sound" type="button" aria-label="Activer le son" aria-pressed="false">SON : OFF</button>
+    <div id="overlay" hidden>
+      <span aria-hidden="true">♛</span><h2>Le royaume est tombé</h2><p id="result"></p>
+      <button id="restart" type="button">Reprendre la couronne ↗</button>
+    </div>
+  </section>
+  <section class="shop" aria-label="Recrutement et améliorations">
+    <button id="recruit" type="button"><span class="icon" aria-hidden="true">♟</span><span><strong>Recruter un archer</strong><small>Un allié pour votre défense</small></span><b id="recruitCost">✦ 20</b></button>
+    <button id="fortify" type="button"><span class="icon" aria-hidden="true">⌂</span><span><strong>Renforcer la maison</strong><small>Répare et ajoute 40 PV max.</small></span><b id="fortifyCost">✦ 30</b></button>
+    <button id="upgrade" type="button"><span class="icon" aria-hidden="true">➶</span><span><strong>Améliorer l’arc</strong><small>Des flèches plus puissantes</small></span><b id="upgradeCost">✦ 25</b></button>
+  </section>
+  <footer><span><i></i> Déplacez le roi pour ramasser les pièces</span><span>CLAVIER : ZQSD / WASD / FLÈCHES <b>·</b> MOBILE : JOYSTICK</span></footer>
+</main>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
