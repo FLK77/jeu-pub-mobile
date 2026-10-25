@@ -69,6 +69,13 @@ export function createPaintedTextures(renderer) {
         c.fillStyle='#fffce594';c.fillRect(x+offset+4,y+4,70,3);
       }
       for(let i=0;i<500;i++)dab(random()*256,random()*256,random()*2+.5,random()+.5,'#a5aa8b38');
+    } else if(kind==='foliage') {
+      fill('#e8f0d6');
+      for(let i=0;i<110;i++){
+        const x=random()*256,y=random()*256;
+        dab(x,y,5+random()*6,2+random()*3,i%2?'#a5c48c66':'#ffffe96b');
+        c.strokeStyle='#86a87642';c.lineWidth=1;c.beginPath();c.moveTo(x-5,y+1);c.lineTo(x+5,y-1);c.stroke();
+      }
     } else if(kind==='cloth') {
       fill('#f4f1e2');
       c.strokeStyle='#a9a7a327';c.lineWidth=1;

@@ -1,27 +1,33 @@
-# Le Dernier Royaume · V1.0.0
+# Le Dernier Royaume · V2.0.0
 
-Jeu original de défense de village inspiré des mécaniques de la vidéo fournie : un roi seul à l’arc défend sa maison, récupère des pièces et recrute des archers. La scène utilise Three.js et WebGL 2 : personnages en volume, couronne, arcs, flèches, pièces animées, maison à toit incliné, protections en pierre, palissades, arbres, ombres et éclairage. Tous les modèles sont créés dans le code ; aucune ressource de la publicité n’est utilisée.
+**L’Aube de Valdor** transforme la défense de village en première aventure d’exploration et de reconstruction. Le roi a perdu une guerre : trouvez des survivants dans une forêt ouverte, ramenez-les au refuge et rebâtissez votre civilisation entre des assauts espacés. Voir [DESIGN-V2.md](DESIGN-V2.md) pour les règles complètes.
 
 ## Jouer immédiatement sur PC Windows
 
-1. Télécharger `Royaume-PC-V1.zip` et choisir **Extraire tout**.
-2. Ouvrir le dossier `Royaume-PC` et double-cliquer sur **LANCER-JEU.bat**.
-3. Autre possibilité : ouvrir directement **jeu-pc.html** avec Edge, Chrome ou Firefox récent.
+Télécharger **Royaume-PC-V2.zip**, choisir **Extraire tout**, ouvrir le dossier `Royaume-PC` puis double-cliquer sur **LANCER-JEU.bat**. On peut aussi ouvrir directement `jeu-pc.html` avec Edge, Chrome ou Firefox récent, compatible WebGL 2. Aucun serveur, installation ou connexion n’est nécessaire après le téléchargement : le moteur 3D, les modèles et les textures sont inclus.
 
-Le moteur 3D et le jeu sont inclus dans le fichier HTML : aucun serveur, compte ou téléchargement supplémentaire n’est nécessaire après extraction. Un navigateur avec WebGL 2 et accélération graphique est requis. Le jeu affiche un message si la 3D n’est pas disponible. La partie n’est pas sauvegardée à la fermeture.
+La V1 reste conservée dans `Royaume-PC-V1.zip` et dans le tag Git `v1.0.0`. `Royaume-PC.zip` désigne la version courante ; `VERSION.txt` identifie la version dans le paquet.
 
-## Commandes et progression
+## Commandes
 
-- **ZQSD / WASD / flèches**, ou **joystick tactile** : déplacer le roi. Les directions suivent l’écran malgré l’angle de la caméra.
-- Tirs automatiques sur les ennemis proches. Approcher des pièces pour les récupérer ; chaque ennemi rapporte 10 pièces.
-- Boutons : recruter un archer, renforcer/réparer la maison ou améliorer l’arc. Les prix augmentent avec les achats.
-- Renforcer la maison ajoute aussi des protections en pierre visibles en 3D.
-- Les vagues deviennent progressivement plus difficiles ; une nouvelle partie peut être lancée après la défaite.
-- Espace ou bouton de pause : pause/reprise. Son facultatif activable par le joueur.
+- **ZQSD / WASD / flèches** : se déplacer ; les tirs sont automatiques.
+- **E** : monter/descendre du cheval, secourir un survivant ou fouiller des vestiges, selon ce qui est proche.
+- **M / Échap / Espace** : ouvrir ou fermer le menu et mettre en pause.
+- Sur mobile : joystick et bouton d’interaction contextuel, menu en haut à droite.
+
+Le terrain occupe toute la fenêtre, en portrait ou paysage. Le menu rassemble la gestion du royaume, la carte des zones explorées, l’histoire et les options. Le véritable mode plein écran du navigateur est disponible dans **Options** lorsque le navigateur l’autorise ; Safari sur iPhone peut utiliser l’ajout à l’écran d’accueil. Le menu suspend les attaques, le déplacement et les délais d’arrivée.
+
+## Progression
+
+Le cheval attend près du refuge et double la vitesse de déplacement. Les survivants doivent être trouvés pendant les accalmies et escortés chez eux. Les vestiges financent les reconstructions et les recrutements. Les assauts sont annoncés 25 secondes à l’avance et séparés par des périodes de calme de 90 à 170 secondes (120 secondes avant le premier).
+
+Les tranches de dix habitants réservent **2 arrivées spontanées, 3 engagements payants et 5 secours en forêt**. Ces proportions cibles de **20 % / 30 % / 50 %** sont détaillées dans le menu. Un premier sauvetage est nécessaire pour commencer les autres modes de recrutement. Deux reconstructions font passer la capacité de 10 à 20 puis 30 habitants ; quinze camps permettent de remplir la part des survivants. Des bâtisseurs produisent lentement des pièces, et les archers défendent le refuge.
+
+La V2 couvre une région et les premières étapes de reconstruction. La reconquête des royaumes ennemis n’est pas encore jouable. La partie reste en mémoire uniquement : aucune sauvegarde entre sessions.
 
 ## Développement
 
-Node.js 24 et Python 3 (uniquement pour construire le ZIP) :
+Node.js 24, Python 3 pour le ZIP :
 
 ```sh
 npm ci
@@ -29,17 +35,15 @@ npm run build:pc
 npm start
 ```
 
-Le serveur écoute sur le port 3000, configurable par `PORT`. Si ce port est occupé, utiliser par exemple `PORT=3200 npm start`. Chaque tâche cloud est déjà isolée : utiliser le dépôt existant, sans créer de worktree sauf demande explicite.
+Port 3000 par défaut ; utiliser `PORT=3200 npm start` si occupé. Chaque tâche cloud est déjà isolée : utiliser le dépôt existant, sans créer de worktree sauf demande explicite.
 
-`game.js` contient la simulation et les commandes. `world3d.js` construit la scène et synchronise les objets avec la simulation. `painted-textures.js` crée les textures peintes directement dans le navigateur, sans image externe. `npm run build` assemble Three.js et ces modules dans `game.bundle.js`. `npm run build:pc` reconstruit aussi l’édition HTML autonome et le ZIP. Reconstruire avant de publier les changements de code : les fichiers générés sont versionnés pour être immédiatement téléchargeables. La licence MIT de Three.js figure dans `THIRD-PARTY-NOTICES.txt`, également incluse dans le ZIP.
+- `simulation.js` : règles et progression, testables sans navigateur.
+- `world-data.js` : limites de la région, camps, lieux et forêt déterministe, index spatial des collisions.
+- `world3d.js` : scène Three.js, modèles, animation, secteurs de forêt et niveaux de détail.
+- `game.js` : commandes, menus, affichage et boucle principale.
+- `painted-textures.js` : textures peintes générées localement.
 
-## Mobile
-
-La version web conserve les commandes tactiles et l’interface adaptée au portrait et au paysage : boutons d’au moins 44 px, marges pour les encoches, achats accessibles sans défilement et caméra suivant le roi. Un second doigt ne vole pas le joystick. La rotation, une annulation tactile ou une perte de capture relâchent les commandes ; le jeu se met en pause en arrière-plan.
-
-Les décors statiques sont regroupés par matériau, l’herbe utilise des instances et les ombres ainsi que la résolution sont réduites sur les appareils tactiles. Les géométries propres aux personnages sont libérées lorsqu’ils disparaissent. La perte du contexte graphique met le jeu en pause.
-
-Cible : Safari iOS 16+ et Chrome Android récents avec WebGL 2, ainsi que les navigateurs PC modernes. Les tests Chromium couvrent neuf formats, dont trois paysages, avec événements tactiles réels. Le rendu et les performances sur un véritable iPhone restent à valider ; WebKit n’a pas pu être téléchargé dans cet environnement cloud. Safari permet d’ajouter le site à l’écran d’accueil. Aucun mode hors ligne mobile n’est installé.
+`npm run build` assemble ces modules avec Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le HTML autonome et le ZIP versionné. Les sorties sont conservées dans Git pour permettre un téléchargement et un hébergement statique immédiats. La licence de Three.js est incluse dans le paquet.
 
 ## Vérifications
 
@@ -49,20 +53,12 @@ npm run test:browser
 npm run test:pc
 ```
 
-- Le test HTTP vérifie la page, le script assemblé et la feuille de style.
-- Les neuf tests navigateur vérifient les neuf formats mobile/tablette, les gestes tactiles, la capture du joystick, les interruptions, la rotation, la caméra 3D, le combat, les pièces, les achats, le redémarrage et les commandes PC. Des tests vérifient aussi la création/suppression des objets 3D, les protections, les textures, les proportions du roi et la stabilité de l’image en pause.
-- Le test PC extrait le ZIP dans un chemin contenant des espaces et vérifie le rendu WebGL réel, le déplacement du roi, la pause et l’absence de requêtes réseau. La politique du navigateur cloud interdit les navigations `file://` et `data:` : le document extrait est donc chargé via `page.setContent`. Le batch et le double-clic restent à valider sur Windows réel.
+Les tests de simulation couvrent notamment la vitesse montée, les escortes, les quotas des trois origines, les arrivées autonomes, les reconstructions, les collisions et les attaques intermittentes. Les tests navigateur vérifient l’interface plein écran sur neuf formats, le prologue, les menus, les commandes tactiles et clavier, le cheval, la progression, la caméra et le redémarrage. Les accès à l’état sont injectés seulement dans les réponses de test.
 
-Chromium système est détecté dans `/usr/bin/chromium` ; `CHROMIUM_PATH` permet une autre installation. Sinon : `npx playwright install chromium`. Les tests de simulation injectent leurs accès à l’état uniquement dans les réponses de test, jamais dans le jeu livré. Pour WebKit, installer ses dépendances et le navigateur avec `npx playwright install webkit`, puis lancer `BROWSER=webkit npm run test:browser` (le test CDP de multitactile brut sera explicitement ignoré). Ses téléchargements nécessitent `cdn.playwright.dev` et `playwright.download.prss.microsoft.com`.
+Le test PC extrait le ZIP, vérifie sa version et le script livré, puis exerce le document en mode hors réseau. La politique du navigateur cloud bloque `file://` et `data:` : les essais utilisent `page.setContent`. Le batch et le double-clic doivent encore être confirmés sur Windows réel. Les essais matériels iPhone restent nécessaires pour le rendu et les performances.
+
+Chromium est détecté dans `/usr/bin/chromium`, ou via `CHROMIUM_PATH`. Sinon, utiliser `npx playwright install chromium`. WebKit peut être utilisé avec `BROWSER=webkit npm run test:browser` après installation de son navigateur et de ses bibliothèques ; le test CDP de gestes bruts y sera explicitement ignoré. Les domaines de téléchargement WebKit sont bloqués dans cet environnement cloud.
 
 ## GitHub Pages
 
-Les fichiers `index.html`, `style.css` et `game.bundle.js` forment le site statique, avec chemins relatifs permettant un sous-répertoire. Les polices Google sont facultatives et ont un repli local ; elles sont retirées de l’édition PC hors ligne.
-
-Dans GitHub, ouvrir **Settings → Pages → Deploy from a branch**, sélectionner la branche contenant les fichiers puis **/(root)** et enregistrer. Après le déploiement, ouvrir le lien fourni par GitHub dans Safari ou un navigateur PC. La disponibilité de Pages pour les dépôts privés dépend de l’offre GitHub ; ne pas rendre le dépôt public sans accord du propriétaire.
-
-## V1
-
-Cette version 1.0.0 fixe la base jouable : défense de maison, arc automatique, vagues, collecte, recrutement et améliorations. Elle utilise une palette plus vive, des textures peintes (herbe, terre, bois, toit, enduit, pierre et tissu), des personnages aux formes arrondies et de plus grands visages. Les ombres sont filtrées et leurs biais réglés pour réduire le scintillement ; l’anticrénelage est aussi activé sur mobile. La profondeur excessive du buste du roi est corrigée.
-
-Le ZIP comporte `VERSION.txt`. `Royaume-PC.zip` reste disponible comme alias de téléchargement ; `Royaume-PC-V1.zip` identifie cette première version. Les tests du navigateur cloud ne garantissent pas l’absence de scintillement sur tous les pilotes graphiques : un contrôle sur le PC du joueur et un iPhone réel restent nécessaires.
+Servir `index.html`, `style.css` et `game.bundle.js`, avec leurs chemins relatifs. Dans **Settings → Pages**, choisir **Deploy from a branch**, la branche voulue et **/(root)**. L’hébergement de dépôts privés dépend de l’offre GitHub ; ne pas rendre le dépôt public sans autorisation. Les polices Google de la version web sont facultatives et retirées de l’édition PC hors ligne.

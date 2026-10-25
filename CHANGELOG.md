@@ -1,5 +1,17 @@
 # Historique
 
+## V2.0.0 — L’Aube de Valdor
+
+- Terrain sur toute la fenêtre ; gestion, carte, histoire et options dans un menu avec pause.
+- Région forestière ouverte, plus de 500 arbres et quinze camps de survivants ; vestiges à découvrir.
+- Arbres détaillés, instanciation par secteurs et niveaux de détail ; roi enrichi d’armure, carquois et cape animée.
+- Cheval utilisable, déplacement deux fois plus rapide, animation et posture montée.
+- Survivants à escorter au refuge, arrivées spontanées et engagements payants.
+- Répartition par tranche de dix places : 20 % / 30 % / 50 %, jusqu’à trente habitants.
+- Reconstruction visible, logements, bâtisseurs et défense autonome des archers.
+- Accalmies variables et avertissement avant les attaques, prologue et chronique sur la chute de Valdor.
+- Nouveau ZIP V2 ; V1 conservée séparément.
+
 ## V1.0.0
 
 Première base jouable de **Le Dernier Royaume**.

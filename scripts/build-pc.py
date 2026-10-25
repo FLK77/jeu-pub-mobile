@@ -41,8 +41,9 @@ if re.search(r'<(?:script|link)\b[^>]*(?:src|href)=', html):
     'COMMANDES\n'
     'ZQSD, WASD ou fleches : deplacer le roi.\n'
     'Tirs automatiques. Approcher les pieces pour les ramasser.\n'
-    'Boutons en bas : recruter, renforcer la maison et ameliorer l arc.\n'
-    'Espace ou bouton Pause : pause / reprise.\n'
+    'Menu Royaume : reconstruire, engager des archers et ameliorer l arc.\n'
+    'M, Echap ou Espace : menu et pause.\n'
+    'E : monter, descendre, secourir ou fouiller les vestiges.\n'
     'Son facultatif avec le bouton SON.\n\n'
     'Prototype : la partie n est pas sauvegardee a la fermeture.\n',
     encoding='utf-8',
@@ -53,4 +54,4 @@ with ZipFile(ROOT / 'Royaume-PC.zip', 'w', compression=ZIP_DEFLATED) as archive:
     for name in ['LANCER-JEU.bat', 'jeu-pc.html', 'LIRE-MOI.txt', 'THIRD-PARTY-NOTICES.txt', 'VERSION.txt']:
         archive.write(OUTPUT / name, 'Royaume-PC/' + name)
 shutil.copyfile(ROOT / 'Royaume-PC.zip', ROOT / f"Royaume-PC-V{VERSION.split('.')[0]}.zip")
-print('Built Royaume-PC-V1.zip and Royaume-PC.zip: extract all, then double-click LANCER-JEU.bat')
+print(f"Built Royaume-PC-V{VERSION.split('.')[0]}.zip and Royaume-PC.zip: extract all, then double-click LANCER-JEU.bat")

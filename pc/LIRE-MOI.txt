@@ -1,4 +1,4 @@
-LE DERNIER ROYAUME - V1.0.0 - PC 3D
+LE DERNIER ROYAUME - V2.0.0 - PC 3D
 
 1. Extraire tout le fichier Royaume-PC.zip.
 2. Ouvrir le dossier Royaume-PC.
@@ -11,8 +11,9 @@ La version PC fonctionne hors ligne, sans serveur ni GitHub Pages.
 COMMANDES
 ZQSD, WASD ou fleches : deplacer le roi.
 Tirs automatiques. Approcher les pieces pour les ramasser.
-Boutons en bas : recruter, renforcer la maison et ameliorer l arc.
-Espace ou bouton Pause : pause / reprise.
+Menu Royaume : reconstruire, engager des archers et ameliorer l arc.
+M, Echap ou Espace : menu et pause.
+E : monter, descendre, secourir ou fouiller les vestiges.
 Son facultatif avec le bouton SON.
 
 Prototype : la partie n est pas sauvegardee a la fermeture.

@@ -15,7 +15,7 @@ test('downloadable ZIP contains a self-contained game playable offline, without 
   try{
     execFileSync('python3',['-c','import sys, zipfile; z=zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None; z.extractall(sys.argv[2])',path.join(root,'Royaume-PC.zip'),temp]);
     const folder=path.join(temp,'Royaume-PC');
-    assert.equal((await fs.readFile(path.join(folder,'VERSION.txt'),'utf8')).trim(),'Le Dernier Royaume - V1.0.0');
+    assert.equal((await fs.readFile(path.join(folder,'VERSION.txt'),'utf8')).trim(),'Le Dernier Royaume - V2.0.0');
     const batch=await fs.readFile(path.join(folder,'LANCER-JEU.bat'),'utf8');
     assert.ok(batch.includes('start "" "%~dp0jeu-pc.html"'));
     const launch={headless:true,args:['--no-sandbox']};
@@ -32,20 +32,17 @@ test('downloadable ZIP contains a self-contained game playable offline, without 
     await page.setContent(html.toString('utf8'));
     await page.waitForFunction(()=>document.getElementById('game').dataset.renderer==='webgl2');
     assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).backgroundColor),'rgb(16, 31, 28)','offline stylesheet is applied');
-    const kingX=()=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>{
-      const canvas=document.getElementById('game'),gl=canvas.getContext('webgl2');
-      const data=new Uint8Array(canvas.width*canvas.height*4);
-      gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,data);
-      let x=0,count=0;
-      // Read the actual illuminated 3D king, allowing for light and tone mapping.
-      for(let i=0;i<data.length;i+=4)if(data[i+2]>data[i]*1.2&&data[i+2]>data[i+1]*1.12&&data[i+2]>85){x+=(i/4)%canvas.width;count++;}
-      resolve(count?x/count:null);
+    const packedScript=(await fs.readFile(path.join(root,'game.bundle.js'),'utf8')).replaceAll('</script','<\\/script');
+    assert.ok(html.toString('utf8').includes(packedScript),'archive contains the exact tested production bundle');
+    await page.locator('#start').click();
+    const rendered=await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>{
+      const c=document.getElementById('game'),gl=c.getContext('webgl2'),pixels=new Uint8Array(c.width*c.height*4);gl.readPixels(0,0,c.width,c.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+      let visible=0,blue=0;for(let i=0;i<pixels.length;i+=4){if(pixels[i]+pixels[i+1]+pixels[i+2]>50)visible++;if(pixels[i+2]>pixels[i]*1.2&&pixels[i+2]>pixels[i+1]*1.12&&pixels[i+2]>85)blue++;}
+      resolve({visible,blue});
     })));
-    const before=await kingX();assert.notEqual(before,null,'3D king pixels rendered by WebGL');
-    await page.keyboard.down('ArrowRight');await page.waitForTimeout(400);await page.keyboard.up('ArrowRight');
-    assert.ok(await kingX()>before+4,'keyboard moves the king in the offline file');
-    await page.keyboard.press('Space');assert.equal(await page.locator('#pause').getAttribute('aria-pressed'),'true');
-    await page.locator('#pause').click();assert.equal(await page.locator('#pause').getAttribute('aria-pressed'),'false');
+    assert.ok(rendered.visible>1000&&rendered.blue>10,'world and royal blue character render offline');
+    await page.keyboard.press('Space');assert.equal(await page.locator('#menu').isVisible(),true);
+    await page.locator('#resume').click();assert.equal(await page.locator('#menu').isVisible(),false);
     assert.deepEqual(network,[],'no external requests needed');
     assert.deepEqual(errors,[]);
   }finally{
