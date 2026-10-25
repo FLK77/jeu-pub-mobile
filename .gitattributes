@@ -1,0 +1,3 @@
+# Generated bundles preserve whitespace inside upstream GLSL shader strings.
+game.bundle.js -whitespace linguist-generated=true
+pc/jeu-pc.html -whitespace linguist-generated=true

@@ -1,11 +1,11 @@
-LE DERNIER ROYAUME - VERSION PC
+LE DERNIER ROYAUME - VERSION PC 3D
 
 1. Extraire tout le fichier Royaume-PC.zip.
 2. Ouvrir le dossier Royaume-PC.
 3. Double-cliquer sur LANCER-JEU.bat.
 
 Autre possibilite : double-cliquer directement sur jeu-pc.html.
-Utiliser Edge, Chrome ou Firefox recent. Aucune installation requise.
+Utiliser Edge, Chrome ou Firefox recent avec WebGL 2. Aucune installation requise.
 La version PC fonctionne hors ligne, sans serveur ni GitHub Pages.
 
 COMMANDES

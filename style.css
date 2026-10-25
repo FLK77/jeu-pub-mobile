@@ -134,3 +134,12 @@ h2 { font: 500 32px Outfit, sans-serif; margin: 0; }
   #restart { padding: 10px 14px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+#pause-screen { position: absolute; inset: 0; background: #10251b88; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; pointer-events: none; }
+#pause-screen strong { font: 500 28px Outfit, sans-serif; letter-spacing: 5px; }
+#pause-screen span { font-size: 12px; color: #e1dec6; }
+#pause-screen[hidden], #graphics-error[hidden] { display: none; }
+#graphics-error { position: absolute; inset: 0; z-index: 5; background: #10251bf5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 24px; }
+#graphics-error > span { color: #e8c56b; font-size: 50px; }
+#graphics-error h2 { font-size: 24px; }
+#graphics-error p { max-width: 400px; line-height: 1.6; }

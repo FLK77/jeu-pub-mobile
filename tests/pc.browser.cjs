@@ -29,19 +29,20 @@ test('downloadable ZIP contains a self-contained game playable offline, without 
     // Test the extracted document using the standard Playwright DOM fixture API.
     const html=await fs.readFile(path.join(folder,'jeu-pc.html'));
     await page.setContent(html.toString('utf8'));
-    await page.waitForFunction(()=>document.getElementById('game').width>300);
+    await page.waitForFunction(()=>document.getElementById('game').dataset.renderer==='webgl2');
     assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).backgroundColor),'rgb(16, 31, 28)','offline stylesheet is applied');
-    const kingX=()=>page.evaluate(()=>{
-      const canvas=document.getElementById('game'),data=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+    const kingX=()=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>{
+      const canvas=document.getElementById('game'),gl=canvas.getContext('webgl2');
+      const data=new Uint8Array(canvas.width*canvas.height*4);
+      gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,data);
       let x=0,count=0;
-      // King's blue tunic: real rendered pixels, no test hooks in the standalone game.
-      for(let i=0;i<data.length;i+=4)if(data[i]===67&&data[i+1]===127&&data[i+2]===186){x+=(i/4)%canvas.width;count++;}
-      if(!count)throw Error('king is not rendered');
-      return x/count;
-    });
-    const before=await kingX();
-    await page.keyboard.down('ArrowRight');await page.waitForTimeout(200);await page.keyboard.up('ArrowRight');
-    assert.ok(await kingX()>before+10,'keyboard moves the king in the offline file');
+      // Read the actual illuminated 3D king, allowing for light and tone mapping.
+      for(let i=0;i<data.length;i+=4)if(data[i+2]>data[i]*1.2&&data[i+2]>data[i+1]*1.12&&data[i+2]>85){x+=(i/4)%canvas.width;count++;}
+      resolve(count?x/count:null);
+    })));
+    const before=await kingX();assert.notEqual(before,null,'3D king pixels rendered by WebGL');
+    await page.keyboard.down('ArrowRight');await page.waitForTimeout(400);await page.keyboard.up('ArrowRight');
+    assert.ok(await kingX()>before+4,'keyboard moves the king in the offline file');
     await page.keyboard.press('Space');assert.equal(await page.locator('#pause').getAttribute('aria-pressed'),'true');
     await page.locator('#pause').click();assert.equal(await page.locator('#pause').getAttribute('aria-pressed'),'false');
     assert.deepEqual(network,[],'no external requests needed');

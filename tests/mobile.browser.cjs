@@ -8,7 +8,8 @@ const browserName=process.env.BROWSER||'chromium';
 const base='http://127.0.0.1:3103';
 let browser,server;
 const source=fs.readFileSync(require('node:path').join(__dirname,'../game.js'),'utf8');
-const hook='\nwindow.__gameTest={get state(){return state},get paused(){return paused},get input(){return {x:joy.x,y:joy.y,pointer:pointer.id,keys:[...keys]}},reset,update,draw,ui};';
+const hook='\nwindow.__gameTest={get state(){return state},get paused(){return paused},get input(){return {x:joy.x,y:joy.y,pointer:pointer.id,keys:[...keys]}},reset,update,draw,ui,get view(){return view}};';
+const testBundle=require('esbuild').buildSync({stdin:{contents:source+hook,resolveDir:require('node:path').join(__dirname,'..'),sourcefile:'game.js'},bundle:true,write:false,format:'iife',logLevel:'silent'}).outputFiles[0].text;
 before(async()=>{
   server=spawn(process.execPath,['server.js'],{cwd:require('node:path').join(__dirname,'..'),env:{...process.env,PORT:'3103'}});
   let ready=false;
@@ -30,10 +31,11 @@ async function open(t,{width=390,height=844,mobile=true}={}){
   page.on('pageerror',e=>errors.push(e.message));
   // Prove gameplay doesn't need external fonts. Hooks only exist in the test response.
   await page.route('https://**/*',route=>route.abort());
-  await page.route('**/game.js',route=>route.fulfill({contentType:'text/javascript',body:source+hook}));
+  await page.route('**/game.bundle.js',route=>route.fulfill({contentType:'text/javascript',body:testBundle}));
   t.after(async()=>{await context.close();assert.deepEqual(errors,[],'no uncaught JavaScript errors');});
   await page.goto(base);
-  await page.waitForFunction(()=>window.__gameTest);
+  await page.waitForFunction(()=>window.__gameTest&&__gameTest.view&&__gameTest.view.diagnostics().frames>0);
+  assert.equal(await page.locator('#game').getAttribute('data-renderer'),'webgl2');
   await page.evaluate(()=>{__gameTest.state.left=1;__gameTest.state.spawn=1e9;});
   return page;
 }
@@ -119,8 +121,8 @@ test('rotation preserves the game and releases input; camera keeps king visible'
   for(const [x,y]of [[40,120],[960,120],[40,610],[960,610]]){
     const visible=await page.evaluate(([x,y])=>{
       const s=__gameTest.state;s.king.x=x;s.king.y=y;__gameTest.draw();
-      const c=document.getElementById('game'),m=c.getContext('2d').getTransform();
-      return {x:m.a*x+m.e,top:m.d*(y-50)+m.f,bottom:m.d*(y+12)+m.f,width:c.width,height:c.height};
+      const top=__gameTest.view.project(x,y,1.85),bottom=__gameTest.view.project(x,y,0);
+      return {x:top.x,top:top.y,bottom:bottom.y,width:top.width,height:top.height};
     },[x,y]);
     assert.ok(visible.x>0&&visible.x<visible.width&&visible.top>=0&&visible.bottom<=visible.height,'king stays in frame: '+JSON.stringify(visible));
   }
@@ -169,4 +171,24 @@ test('PC controls work and Space on a shop button buys instead of pausing',async
   await page.locator('#recruit').focus();await page.keyboard.press('Space');
   assert.equal(await page.evaluate(()=>__gameTest.state.allies.length),1);
   assert.equal(await page.evaluate(()=>__gameTest.paused),false);
+});
+
+
+test('3D scene renders actors, projectiles, coins and visible fortifications; restart clears them',async t=>{
+  const page=await open(t,{width:1280,height:900,mobile:false});
+  const initial=await page.evaluate(()=>__gameTest.view.diagnostics());
+  assert.ok(initial.triangles>1000,'real 3D meshes are submitted');
+  assert.ok(initial.drawCalls<180,'static geometry is batched for mobile');
+  const populated=await page.evaluate(()=>{
+    const s=__gameTest.state;
+    s.fort=1;s.allies.push({x:400,y:320,cool:10});
+    s.enemies.push({x:600,y:500,hp:40,maxHp:50,speed:0});
+    s.coins.push({x:680,y:400,value:10,age:0});
+    s.arrows.push({x:520,y:400,vx:0,vy:500,life:10,damage:30});
+    __gameTest.draw();
+    return __gameTest.view.diagnostics();
+  });
+  assert.deepEqual([populated.actors,populated.coins,populated.arrows,populated.fortified],[3,1,1,true]);
+  const empty=await page.evaluate(()=>{__gameTest.reset();__gameTest.draw();return __gameTest.view.diagnostics();});
+  assert.deepEqual([empty.actors,empty.coins,empty.arrows,empty.fortified],[1,0,0,false]);
 });

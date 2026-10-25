@@ -7,10 +7,15 @@
     "start": "node server.js",
     "test": "node --test tests/server.test.js",
     "test:browser": "node --test tests/mobile.browser.cjs",
-    "build:pc": "python3 scripts/build-pc.py",
-    "test:pc": "node --test tests/pc.browser.cjs"
+    "build:pc": "npm run build && python3 scripts/build-pc.py",
+    "test:pc": "node --test tests/pc.browser.cjs",
+    "build": "node scripts/build-web.mjs"
   },
   "devDependencies": {
+    "esbuild": "0.28.2",
     "playwright": "1.62.1"
+  },
+  "dependencies": {
+    "three": "0.186.1"
   }
 }
