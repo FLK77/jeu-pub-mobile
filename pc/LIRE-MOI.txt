@@ -1,0 +1,18 @@
+LE DERNIER ROYAUME - VERSION PC
+
+1. Extraire tout le fichier Royaume-PC.zip.
+2. Ouvrir le dossier Royaume-PC.
+3. Double-cliquer sur LANCER-JEU.bat.
+
+Autre possibilite : double-cliquer directement sur jeu-pc.html.
+Utiliser Edge, Chrome ou Firefox recent. Aucune installation requise.
+La version PC fonctionne hors ligne, sans serveur ni GitHub Pages.
+
+COMMANDES
+ZQSD, WASD ou fleches : deplacer le roi.
+Tirs automatiques. Approcher les pieces pour les ramasser.
+Boutons en bas : recruter, renforcer la maison et ameliorer l arc.
+Espace ou bouton Pause : pause / reprise.
+Son facultatif avec le bouton SON.
+
+Prototype : la partie n est pas sauvegardee a la fermeture.

@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#172e27">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mon Royaume">
+  <title>Le Dernier Royaume</title>
+  <style>
+
+:root { color-scheme: dark; font-family: 'DM Sans', sans-serif; background: #101f1c; color: #f5f1df; }
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(ellipse at 50% 0, #294238 0, transparent 65%); min-height: 100vh; min-height: 100svh; }
+button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+button { cursor: pointer; font: inherit; min-height: 44px; }
+button:focus-visible, a:focus-visible { outline: 3px solid #f2d683; outline-offset: 3px; }
+main { max-width: 1160px; margin: auto; padding: 25px 36px; }
+header { display: flex; align-items: center; gap: 22px; border-bottom: 1px solid #ffffff16; padding-bottom: 24px; }
+.brand { display: flex; gap: 12px; align-items: center; color: #eac66f; text-decoration: none; font-size: 40px; }
+.brand span { font-family: Outfit, sans-serif; font-size: 11px; letter-spacing: 3px; font-weight: 700; line-height: 1.6; }
+.brand small { display: block; font-size: 19px; letter-spacing: 4px; color: #faf4de; }
+.edition { margin-left: auto; font-size: 10px; letter-spacing: 2px; color: #a4b2a3; }
+#pause { display: grid; place-items: center; flex-shrink: 0; background: #ffffff08; border: 1px solid #ffffff20; color: #eadfbd; border-radius: 9px; width: 44px; height: 44px; padding: 0; }
+.pause-symbol { width: 13px; height: 15px; border-left: 4px solid currentColor; border-right: 4px solid currentColor; }
+#pause[aria-pressed="true"] .pause-symbol { width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-left: 12px solid currentColor; border-right: 0; margin-left: 3px; }
+.heading { display: flex; align-items: center; justify-content: space-between; padding: 28px 0 24px; gap: 12px; }
+.heading > div:first-child { min-width: 0; }
+.eyebrow { color: #c7ad71; font-size: 10px; letter-spacing: 2.6px; }
+h1 { font-family: Outfit, sans-serif; font-weight: 500; font-size: 34px; letter-spacing: -1px; margin: 7px 0; }
+p { color: #a9b6a8; font-size: 13px; margin: 0; }
+.wallet { display: flex; align-items: center; flex-shrink: 0; gap: 15px; background: #ffffff05; border: 1px solid #d8b76c35; border-radius: 12px; padding: 13px 26px; }
+.wallet > span { color: #efcb65; font-size: 34px; }
+.wallet small { font-size: 9px; letter-spacing: 1.5px; color: #b9b89e; }
+.wallet strong { display: block; font: 600 27px Outfit, sans-serif; font-variant-numeric: tabular-nums; }
+.arena { position: relative; border: 1px solid #a6b68b45; border-radius: 18px; overflow: hidden; height: 510px; box-shadow: 0 22px 55px #0004; background: #8ca265; isolation: isolate; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; overscroll-behavior: contain; }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.topline { pointer-events: none; position: absolute; inset: 18px 20px auto; display: flex; justify-content: space-between; align-items: flex-start; font-size: 11px; font-weight: 700; gap: 10px; }
+.wave, #army, .health { border: 1px solid #ffffff28; background: #20362deb; box-shadow: 0 3px 7px #0002; border-radius: 9px; padding: 11px 15px; letter-spacing: 1px; white-space: nowrap; }
+.live { display: inline-block; width: 6px; height: 6px; background: #e6c974; border-radius: 50%; margin-right: 8px; }
+.health { width: 190px; min-width: 0; letter-spacing: 0; }
+.health > span { display: flex; justify-content: space-between; gap: 8px; }
+.health > div { height: 5px; background: #0e211a; margin-top: 7px; border-radius: 4px; overflow: hidden; }
+.health i { display: block; background: #9fc779; height: 100%; width: 100%; }
+#notice { position: absolute; top: 82px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 24px); width: max-content; text-align: center; font-size: 12px; background: #20362de0; padding: 9px 16px; border-radius: 20px; transition: opacity .5s; pointer-events: none; }
+.hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: #f9ffebcf; font-size: 9px; letter-spacing: 1.4px; pointer-events: none; white-space: nowrap; }
+#stick { position: absolute; width: 100px; height: 100px; border: 1px solid #fffa; background: #20362d40; border-radius: 50%; left: 20px; bottom: 32px; touch-action: none; cursor: grab; }
+#stick:active { cursor: grabbing; }
+#knob { position: absolute; width: 40px; height: 40px; border-radius: 50%; background: #fff9; left: calc(50% - 20px); top: calc(50% - 20px); border: 1px solid #fffa; pointer-events: none; will-change: transform; }
+#sound { position: absolute; right: 14px; bottom: 26px; min-width: 72px; color: #f9ffeb; font-size: 10px; background: #20362dbb; border: 1px solid #fff5; padding: 8px; border-radius: 9px; }
+.shop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; user-select: none; -webkit-user-select: none; }
+.shop button { display: flex; align-items: center; gap: 12px; text-align: left; padding: 18px 14px; border-radius: 12px; border: 1px solid #ffffff16; background: #24372f; color: #f4ecd7; transition: background .2s; min-width: 0; }
+@media (hover: hover) { .shop button:hover:not(:disabled) { background: #314b3e; } }
+.shop button:disabled { opacity: .55; cursor: default; }
+.shop .icon { font-size: 29px; color: #ddc284; }
+.shop strong { display: block; font-size: 12px; font-weight: 500; }
+.shop small { display: block; font-size: 10px; color: #a7b2a1; margin-top: 5px; }
+.shop b { margin-left: auto; color: #e5c371; white-space: nowrap; font-size: 12px; }
+footer { display: flex; justify-content: space-between; color: #8d9e8d; font-size: 9px; margin-top: 21px; letter-spacing: .4px; }
+footer i { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #a2b989; margin-right: 6px; }
+footer b { margin: 0 8px; }
+#overlay { position: absolute; inset: 0; background: #10251deb; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 18px; text-align: center; padding: 20px; }
+#overlay[hidden] { display: none; }
+#overlay > span { font-size: 60px; color: #e8c56b; }
+h2 { font: 500 32px Outfit, sans-serif; margin: 0; }
+#restart { border: 0; background: #e6c477; color: #243426; padding: 15px 24px; border-radius: 8px; font-weight: 700; }
+
+/* Keep the battlefield AND all purchases within the usable mobile viewport. */
+@media (max-width: 700px), (pointer: coarse) and (max-width: 1100px) {
+  main { display: flex; flex-direction: column; gap: 10px; height: 100vh; height: 100dvh; padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  header { padding-bottom: 6px; gap: 12px; flex-shrink: 0; min-height: 46px; }
+  .brand { font-size: 31px; gap: 9px; }
+  .brand span { font-size: 9px; letter-spacing: 2.4px; }
+  .brand small { font-size: 16px; letter-spacing: 3px; }
+  .edition { display: none; }
+  #pause { margin-left: auto; }
+  .heading { padding: 2px 0 4px; flex-shrink: 0; gap: 9px; }
+  h1 { font-size: clamp(20px, 5.8vw, 27px); margin: 5px 0; }
+  .eyebrow { font-size: 8px; letter-spacing: 1px; }
+  .heading p { font-size: 10px; line-height: 1.4; }
+  .wallet { padding: 9px 10px; gap: 7px; max-width: 40%; }
+  .wallet small { font-size: 7px; letter-spacing: .8px; }
+  .wallet strong { font-size: 22px; }
+  .wallet > span { font-size: 24px; }
+  .arena { flex: 1; min-height: 220px; height: auto; border-radius: 12px; }
+  .topline { inset: 10px 8px auto; font-size: 9px; gap: 5px; }
+  .wave, #army, .health { padding: 9px 7px; letter-spacing: .3px; }
+  .health { width: 130px; }
+  #notice { top: 70px; font-size: 11px; }
+  .shop { flex-shrink: 0; gap: 6px; margin: 0; }
+  .shop button { padding: 10px 4px; flex-direction: column; gap: 5px; text-align: center; min-height: 104px; }
+  .shop strong { font-size: 11px; line-height: 1.3; }
+  .shop small { font-size: 9px; line-height: 1.3; margin-top: 4px; }
+  .shop b { margin: auto 0 0; font-size: 12px; }
+  .shop .icon { font-size: 24px; }
+  footer { display: none; }
+  .hint { font-size: 7px; letter-spacing: .8px; bottom: 10px; }
+  #stick { bottom: 30px; left: 16px; }
+  #sound { right: 12px; }
+  #overlay { gap: 12px; padding: 12px; }
+  h2 { font-size: 27px; }
+}
+@media (max-height: 700px) and (max-width: 700px) {
+  main { gap: 7px; }
+  .heading p, .eyebrow, .shop small { display: none; }
+  .heading { padding: 0; }
+  h1 { font-size: 20px; }
+  .wallet { padding: 6px 9px; }
+  .shop button { min-height: 82px; padding: 8px 4px; }
+  .shop .icon { font-size: 20px; }
+}
+/* In landscape the shop sits to the right, outside the joystick and battlefield. */
+@media (orientation: landscape) and (max-height: 550px) and (max-width: 1100px) {
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 174px; grid-template-rows: 44px minmax(0, 1fr); gap: 8px; height: 100vh; height: 100dvh; padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  header { grid-column: 1; grid-row: 1; padding: 0; border: 0; min-height: 0; }
+  .brand { font-size: 28px; gap: 8px; }
+  .brand span { font-size: 8px; }
+  .brand small { font-size: 14px; }
+  .edition { display: none; }
+  #pause { margin-left: auto; }
+  .heading { display: flex; grid-column: 2; grid-row: 1; padding: 0; justify-content: flex-end; }
+  .heading > div:first-child { display: none; }
+  .wallet { max-width: none; padding: 4px 12px; gap: 8px; height: 44px; }
+  .wallet > span, .wallet strong { font-size: 22px; }
+  .wallet small { display: none; }
+  .arena { grid-column: 1; grid-row: 2; height: auto; min-height: 0; border-radius: 12px; }
+  .shop { grid-column: 2; grid-row: 2; display: grid; grid-template-columns: 1fr; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 7px; margin: 0; min-height: 0; }
+  .shop button { display: grid; grid-template-columns: 25px minmax(0, 1fr); grid-template-rows: 1fr auto; gap: 2px 8px; padding: 7px 10px; text-align: left; min-height: 0; }
+  .shop .icon { grid-column: 1; grid-row: 1 / 3; font-size: 25px; }
+  .shop strong { font-size: 11px; line-height: 1.3; }
+  .shop small, footer, .hint { display: none; }
+  .shop b { grid-column: 2; margin: 0; font-size: 12px; }
+  .topline { inset: 8px; font-size: 9px; gap: 4px; }
+  .wave, #army, .health { padding: 6px 7px; letter-spacing: 0; }
+  .health { width: 125px; }
+  #notice { top: 59px; font-size: 10px; padding: 6px 12px; }
+  #stick { width: 88px; height: 88px; left: 12px; bottom: 12px; }
+  #sound { right: 12px; bottom: 12px; }
+  #overlay { gap: 8px; padding: 10px; }
+  #overlay > span { font-size: 32px; }
+  h2 { font-size: 23px; }
+  #result { font-size: 11px; }
+  #restart { padding: 10px 14px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <a class="brand" href="./jeu-pc.html">♛ <span>LE DERNIER<small>ROYAUME</small></span></a>
+    <span class="edition">DÉFENSE DU VILLAGE · PROTOTYPE</span>
+    <button id="pause" type="button" aria-label="Mettre en pause" aria-pressed="false"><span class="pause-symbol" aria-hidden="true"></span></button>
+  </header>
+  <section class="heading" aria-label="Votre royaume">
+    <div><span class="eyebrow">VOTRE COURONNE. VOTRE COMBAT.</span><h1>Un roi. Tout un royaume.</h1><p>Défendez votre foyer, rassemblez votre armée.</p></div>
+    <div class="wallet"><span aria-hidden="true">✦</span><div><small>VOTRE TRÉSOR</small><strong id="gold" aria-label="Pièces disponibles">0</strong></div></div>
+  </section>
+  <section class="arena" aria-label="Terrain de jeu">
+    <canvas id="game" aria-label="Défendez la maison. Déplacez le roi avec le joystick tactile, ZQSD, WASD ou les flèches. Les tirs sont automatiques."></canvas>
+    <div class="topline">
+      <div class="wave"><span class="live"></span><span id="wave">VAGUE 1</span></div>
+      <div class="health"><span>⌂ <b id="hp">100 / 100</b></span><div><i id="healthbar"></i></div></div>
+      <div id="army">♟ 0 ARCHER</div>
+    </div>
+    <div id="notice" role="status">Protégez votre maison !</div>
+    <div class="hint">DÉPLACEZ-VOUS · TIRS AUTOMATIQUES</div>
+    <div id="stick" role="group" aria-label="Joystick : maintenez et glissez pour déplacer le roi"><div id="knob"></div></div>
+    <button id="sound" type="button" aria-label="Activer le son" aria-pressed="false">SON : OFF</button>
+    <div id="overlay" hidden>
+      <span aria-hidden="true">♛</span><h2>Le royaume est tombé</h2><p id="result"></p>
+      <button id="restart" type="button">Reprendre la couronne ↗</button>
+    </div>
+  </section>
+  <section class="shop" aria-label="Recrutement et améliorations">
+    <button id="recruit" type="button"><span class="icon" aria-hidden="true">♟</span><span><strong>Recruter un archer</strong><small>Un allié pour votre défense</small></span><b id="recruitCost">✦ 20</b></button>
+    <button id="fortify" type="button"><span class="icon" aria-hidden="true">⌂</span><span><strong>Renforcer la maison</strong><small>Répare et ajoute 40 PV max.</small></span><b id="fortifyCost">✦ 30</b></button>
+    <button id="upgrade" type="button"><span class="icon" aria-hidden="true">➶</span><span><strong>Améliorer l’arc</strong><small>Des flèches plus puissantes</small></span><b id="upgradeCost">✦ 25</b></button>
+  </section>
+  <footer><span><i></i> Déplacez le roi pour ramasser les pièces</span><span>CLAVIER : ZQSD / WASD / FLÈCHES <b>·</b> MOBILE : JOYSTICK</span></footer>
+</main>
+<script type="module">
+const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
+const W=1000,H=650,home={x:500,y:240};let state,paused=false,last=0,clock=0,noticeTime=0,sound=false,audio;
+const keys=new Set(),joy={x:0,y:0},pointer={id:null};
+const joystick=$('stick');
+function reset(){clearInput();state={gold:0,hp:100,maxHp:100,wave:1,kills:0,level:1,fort:0,king:{x:500,y:360,cool:0},allies:[],enemies:[],arrows:[],coins:[],particles:[],spawn:2,left:7,rest:0,over:false};paused=false;syncPauseButton();$('overlay').hidden=true;toast('Protégez votre maison !');ui();}
+function toast(t){$('notice').textContent=t;noticeTime=3;$('notice').style.opacity=1;}
+function costs(){return{recruit:20+state.allies.length*10,fortify:30+state.fort*20,upgrade:25+(state.level-1)*20};}
+function setText(id,text){const el=$(id),value=String(text);if(el.textContent!==value)el.textContent=value;}
+function ui(){
+  const c=costs();
+  setText('gold',state.gold);
+  setText('hp',`${Math.ceil(state.hp)} / ${state.maxHp}`);
+  const width=`${Math.max(0,state.hp/state.maxHp)*100}%`;
+  if($('healthbar').style.width!==width)$('healthbar').style.width=width;
+  setText('wave',`VAGUE ${state.wave}`);
+  setText('army',`♟ ${state.allies.length} ARCHER${state.allies.length>1?'S':''}`);
+  for(const k of Object.keys(c)){
+    setText(k+'Cost','✦ '+c[k]);
+    const disabled=state.gold<c[k]||state.over;
+    if($(k).disabled!==disabled)$(k).disabled=disabled;
+  }
+}
+for(const kind of ['recruit','fortify','upgrade'])$(kind).onclick=()=>{const c=costs()[kind];if(state.over||state.gold<c)return;state.gold-=c;if(kind==='recruit'){const i=state.allies.length;state.allies.push({x:350+(i%6)*60,y:295+Math.floor(i/6)*35,cool:.2});toast('Un archer rejoint votre défense');}if(kind==='fortify'){state.fort++;state.maxHp+=40;state.hp=Math.min(state.maxHp,state.hp+70);toast('Maison renforcée et réparée');}if(kind==='upgrade'){state.level++;toast('Arc amélioré · niveau '+state.level);}beep(620);ui();};
+function beep(f){if(!sound)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume().catch(()=>{});const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=f;g.gain.setValueAtTime(.025,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.12);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+.12);}catch{}}
+$('sound').onclick=()=>{sound=!sound;$('sound').textContent='SON : '+(sound?'ON':'OFF');$('sound').setAttribute('aria-pressed',String(sound));$('sound').setAttribute('aria-label',sound?'Couper le son':'Activer le son');beep(440);};
+function syncPauseButton(){
+  $('pause').setAttribute('aria-pressed',String(paused));
+  $('pause').setAttribute('aria-label',paused?'Reprendre':'Mettre en pause');
+}
+function pause(){
+  if(state.over)return;
+  paused=!paused;
+  clearInput();
+  syncPauseButton();
+  toast(paused?'Partie en pause':'Défendez le royaume !');
+}
+$('pause').onclick=pause;$('restart').onclick=reset;
+const movementKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','z','q']);
+addEventListener('keydown',e=>{
+  if(e.altKey||e.ctrlKey||e.metaKey||e.target.closest?.('input,textarea,select,[contenteditable="true"]'))return;
+  if(e.code==='Space'){
+    // Preserve native Space activation of shop, sound and pause buttons.
+    if(e.target.closest?.('button,a'))return;
+    e.preventDefault();if(!e.repeat)pause();return;
+  }
+  const key=e.key.toLowerCase();
+  if(movementKeys.has(key)){e.preventDefault();keys.add(key);}
+});
+addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+function releaseStick(){
+  const id=pointer.id;
+  pointer.id=null;joy.x=joy.y=0;$('knob').style.transform='';
+  if(id!==null&&joystick.hasPointerCapture(id))joystick.releasePointerCapture(id);
+}
+function clearInput(){keys.clear();releaseStick();}
+function suspend(){clearInput();if(state&&!paused&&!state.over)pause();}
+addEventListener('blur',suspend);
+addEventListener('pagehide',suspend);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend();});
+function stick(e){
+  const r=joystick.getBoundingClientRect(),radius=(r.width-40)/2;
+  const dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2;
+  const len=Math.hypot(dx,dy),m=Math.min(radius,len);
+  joy.x=len?dx/len*m/radius:0;joy.y=len?dy/len*m/radius:0;
+  $('knob').style.transform=`translate(${joy.x*radius}px,${joy.y*radius}px)`;
+}
+joystick.addEventListener('pointerdown',e=>{
+  if(pointer.id!==null||paused||state.over||(e.pointerType==='mouse'&&e.button!==0))return;
+  e.preventDefault();pointer.id=e.pointerId;joystick.setPointerCapture(e.pointerId);stick(e);
+});
+joystick.addEventListener('pointermove',e=>{if(e.pointerId===pointer.id)stick(e);});
+function endStick(e){if(e.pointerId===pointer.id)releaseStick();}
+joystick.addEventListener('lostpointercapture',endStick);
+addEventListener('pointerup',endStick);
+addEventListener('pointercancel',endStick);
+// A rotated device must not keep the old joystick direction or a held keyboard key.
+addEventListener('resize',clearInput);
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function shoot(unit,dt,king){unit.cool-=dt;if(unit.cool>0)return;let target=null,best=king?340:310;for(const e of state.enemies){const d=dist(unit,e);if(d<best){target=e;best=d;}}if(target){unit.cool=king?Math.max(.22,.65-state.level*.045):.95;const dx=target.x-unit.x,dy=target.y-unit.y,d=Math.hypot(dx,dy);state.arrows.push({x:unit.x,y:unit.y-12,vx:dx/d*510,vy:dy/d*510,life:1.1,damage:king?20+state.level*10:25});}}
+function update(dt){clock+=dt;if(noticeTime>0){noticeTime-=dt;if(noticeTime<=0)$('notice').style.opacity=0;}if(paused||state.over)return;const s=state,k=s.king;let dx=joy.x,dy=joy.y;if(keys.has('arrowleft')||keys.has('a')||keys.has('q'))dx--;if(keys.has('arrowright')||keys.has('d'))dx++;if(keys.has('arrowup')||keys.has('w')||keys.has('z'))dy--;if(keys.has('arrowdown')||keys.has('s'))dy++;const len=Math.hypot(dx,dy);if(len){k.x=Math.max(40,Math.min(960,k.x+dx/Math.max(1,len)*190*dt));k.y=Math.max(120,Math.min(610,k.y+dy/Math.max(1,len)*190*dt));}shoot(k,dt,true);s.allies.forEach(a=>shoot(a,dt,false));
+if(s.left>0){s.spawn-=dt;if(s.spawn<=0){s.spawn=Math.max(.55,1.7-s.wave*.09);s.left--;const side=Math.random();s.enemies.push({x:side<.18?30:side>.82?970:90+Math.random()*820,y:side<.18||side>.82?410+Math.random()*150:690,hp:45+s.wave*9,maxHp:45+s.wave*9,speed:24+s.wave*3,hit:0});}}else if(!s.enemies.length){s.rest+=dt;if(s.rest>5){s.wave++;s.left=5+s.wave*2;s.rest=0;s.spawn=1;toast('Vague '+s.wave+' · Préparez vos archers !');}}
+for(const e of s.enemies){const d=dist(e,home);if(d>65){e.x+=(home.x-e.x)/d*e.speed*dt;e.y+=(home.y-e.y)/d*e.speed*dt;}else{s.hp-=dt*(4+s.wave*.7);e.hit+=dt;}if(dist(e,k)<24){const d2=dist(e,k)||1;k.x=Math.max(35,Math.min(965,k.x+(k.x-e.x)/d2*70*dt));k.y=Math.max(120,Math.min(615,k.y+(k.y-e.y)/d2*70*dt));}}
+for(const a of s.arrows){a.x+=a.vx*dt;a.y+=a.vy*dt;a.life-=dt;for(const e of s.enemies){if(e.hp>0&&dist(a,e)<24){e.hp-=a.damage;a.life=0;for(let i=0;i<4;i++)s.particles.push({x:e.x,y:e.y,vx:(Math.random()-.5)*70,vy:-Math.random()*65,life:.4});break;}}}s.arrows=s.arrows.filter(a=>a.life>0);s.enemies=s.enemies.filter(e=>{if(e.hp>0)return true;s.kills++;s.coins.push({x:e.x,y:e.y,value:10,age:0});beep(200);return false;});
+s.coins=s.coins.filter(c=>{c.age+=dt;const d=dist(c,k);if(d<105){c.x+=(k.x-c.x)*dt*9;c.y+=(k.y-c.y)*dt*9;}if(d<24){s.gold+=c.value;beep(820);return false;}return true;});for(const p of s.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;}s.particles=s.particles.filter(p=>p.life>0);if(s.hp<=0){s.hp=0;s.over=true;clearInput();$('overlay').hidden=false;$('result').textContent=`${s.kills} ennemis vaincus · Vague ${s.wave}. Votre prochaine armée sera plus forte.`;}ui();}
+function ellipse(x,y,rx,ry,color){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();}function poly(points,color){ctx.fillStyle=color;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();}function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
+function tree(x,y,size=1){ellipse(x+10,y+15,25*size,10*size,'#425b3e35');rect(x-4,y-25*size,8,35*size,'#6d6043');for(let i=0;i<3;i++){poly([[x-25*size+i*4,y-i*18*size],[x,y-65*size-i*12],[x+25*size-i*4,y-i*18*size]],i%2?'#426b4d':'#507f52');}}
+function fence(x1,y1,x2,y2){ctx.strokeStyle='#69523b';ctx.lineWidth=6;for(const off of [3,17]){ctx.beginPath();ctx.moveTo(x1,y1-off);ctx.lineTo(x2,y2-off);ctx.stroke();}const len=Math.hypot(x2-x1,y2-y1);for(let i=0;i<=len;i+=15){const t=i/len,x=x1+(x2-x1)*t,y=y1+(y2-y1)*t;poly([[x-4,y+7],[x-4,y-26],[x,y-33],[x+4,y-26],[x+4,y+7]],'#a08055');rect(x-2,y-25,2,28,'#c2a16a');}}
+function person(p,type){const enemy=type==='enemy',king=type==='king',x=p.x,y=p.y,bob=Math.sin(clock*7+x)*1.4;ellipse(x,y+8,14,6,'#314b3940');rect(x-7,y-3,5,12,'#35413c');rect(x+2,y-3,5,12,'#35413c');poly([[x-10,y-22+bob],[x+9,y-22+bob],[x+12,y+1],[x-11,y+1]],enemy?'#ad4743':king?'#437fba':'#e9d4a2');if(king)poly([[x-9,y-22],[x-16,y+6],[x-4,y+3]],'#315a9b');ellipse(x,y-29+bob,8,9,'#edc494');if(enemy){ellipse(x,y-34+bob,9,6,'#7d343a');rect(x-9,y-33+bob,18,4,'#c05a4f');}else if(king){poly([[x-9,y-35+bob],[x-10,y-45+bob],[x-4,y-41+bob],[x,y-48+bob],[x+4,y-41+bob],[x+10,y-45+bob],[x+9,y-35+bob]],'#f6cf62');rect(x-7,y-37+bob,14,3,'#b88e3e');}else{ellipse(x,y-35+bob,9,6,'#344b43');}if(!enemy){ctx.strokeStyle='#725139';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(x+12,y-14,12,-1.3,1.3);ctx.stroke();ctx.strokeStyle='#f5e3b4';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+15,y-26);ctx.lineTo(x+15,y-2);ctx.stroke();}else{ctx.strokeStyle='#d7c9ae';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+12,y-1);ctx.lineTo(x+19,y-25);ctx.stroke();if(p.hp<p.maxHp){rect(x-14,y-50,28,4,'#493c32');rect(x-14,y-50,28*p.hp/p.maxHp,4,'#df7660');}}}
+function draw(){const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);if(canvas.width!==Math.round(r.width*dpr)||canvas.height!==Math.round(r.height*dpr)){canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);}const scale=Math.max(canvas.width/W,canvas.height/H),viewWidth=canvas.width/scale,viewHeight=canvas.height/scale,cameraX=Math.max(0,Math.min(W-viewWidth,state.king.x-viewWidth/2)),cameraY=Math.max(0,Math.min(H-viewHeight,state.king.y-viewHeight*.6));ctx.setTransform(scale,0,0,scale,-cameraX*scale,-cameraY*scale);rect(0,0,W,H,'#8fa769');
+for(let i=0;i<100;i++){const x=(i*137.3)%W,y=(i*83.7)%H;ellipse(x,y,18+i%15,8,'#9fb97940');if(i%3===0){ctx.strokeStyle='#718c5060';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-3,y-6);ctx.moveTo(x,y);ctx.lineTo(x+3,y-4);ctx.stroke();}}
+ctx.strokeStyle='#c5b589';ctx.lineWidth=85;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(510,700);ctx.bezierCurveTo(470,530,570,430,500,245);ctx.stroke();ctx.strokeStyle='#d1bf9340';ctx.lineWidth=60;ctx.stroke();ellipse(500,255,195,120,'#b7bc8460');
+for(const [x,y,s]of[[65,130,1.4],[150,85,1],[870,125,1.5],[940,220,.9],[70,420,.8],[910,560,1.3],[170,590,.9],[790,70,1]])tree(x,y,s);
+for(const [x,y]of[[210,380],[820,350],[130,500],[740,595]]){ellipse(x,y,18,10,'#4b63422a');poly([[x-15,y],[x-9,y-15],[x+5,y-19],[x+17,y-7],[x+12,y+4]],'#a2a58c');poly([[x-9,y-15],[x+5,y-19],[x+17,y-7],[x,y-5]],'#bdc0a7');}
+fence(290,205,290,365);fence(710,205,710,365);fence(290,365,435,365);fence(565,365,710,365);
+ellipse(510,260,90,25,'#3e513a35');poly([[430,193],[500,157],[570,193],[570,258],[430,258]],'#e1cc9b');poly([[500,157],[570,193],[570,258],[500,225]],'#b49a70');rect(465,211,29,47,'#5b5642');rect(469,215,21,43,'#424d3d');rect(525,207,24,21,'#5b715b');rect(535,207,3,21,'#dabd88');rect(525,216,24,3,'#dabd88');poly([[417,194],[497,134],[583,190],[566,205],[497,157],[431,208]],'#6f6154');poly([[417,194],[497,134],[506,142],[435,201]],'#a6896a');for(let i=0;i<5;i++){ctx.strokeStyle='#574f47';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(503+i*12,150+i*7);ctx.lineTo(484+i*14,166+i*8);ctx.stroke();}rect(542,133,15,32,'#867861');rect(539,130,21,8,'#b3a281');rect(498,112,3,31,'#6d614c');poly([[501,111],[531,117],[501,128]],'#d9bd66');ellipse(500,272,55,11,'#c7b88c');
+ctx.strokeStyle='#f9e5a34a';ctx.lineWidth=2;ctx.setLineDash([5,9]);ctx.beginPath();ctx.ellipse(state.king.x,state.king.y,100,58,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+for(const c of state.coins){const b=Math.sin(clock*5+c.x)*3;ellipse(c.x,c.y+4,10,4,'#65553535');ellipse(c.x,c.y-4+b,9,10,'#ba872e');ellipse(c.x,c.y-6+b,8,9,'#f1d16c');ctx.fillStyle='#b88a31';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText('✦',c.x,c.y-2+b);}
+const actors=[...state.allies.map(p=>({p,t:'ally'})),...state.enemies.map(p=>({p,t:'enemy'})),{p:state.king,t:'king'}].sort((a,b)=>a.p.y-b.p.y);actors.forEach(a=>person(a.p,a.t));
+for(const a of state.arrows){const n=Math.hypot(a.vx,a.vy),dx=a.vx/n,dy=a.vy/n;ctx.strokeStyle='#fff0c3';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(a.x-dx*15,a.y-dy*15);ctx.lineTo(a.x,a.y);ctx.stroke();poly([[a.x+dx*5,a.y+dy*5],[a.x-dy*3,a.y+dx*3],[a.x+dy*3,a.y-dx*3]],'#e7f6f3');}for(const p of state.particles)ellipse(p.x,p.y,2,2,'#f3d79b');if(paused){ctx.setTransform(1,0,0,1,0,0);rect(0,0,canvas.width,canvas.height,'#14291eaa');ctx.fillStyle='#f8ecd0';ctx.font=`500 ${26*dpr}px sans-serif`;ctx.textAlign='center';ctx.fillText('PAUSE',canvas.width/2,canvas.height/2);}}
+function frame(t){const dt=Math.min((t-last)/1000||0,.04);last=t;update(dt);draw();requestAnimationFrame(frame);}reset();requestAnimationFrame(frame);
+
+</script>
+</body>
+</html>

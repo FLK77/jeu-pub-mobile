@@ -62,3 +62,11 @@ Une fois les fichiers envoyés dans le dépôt GitHub :
 5. Facultatif : **Partager → Sur l’écran d’accueil** pour créer un raccourci.
 
 GitHub Pages rend le jeu accessible sur le Web. Sa disponibilité pour un dépôt privé dépend de l’offre GitHub ; ne pas rendre le dépôt public sans l’accord du propriétaire.
+
+## Lanceur PC hors ligne (Windows)
+
+Télécharger `Royaume-PC.zip`, choisir **Extraire tout**, ouvrir le dossier `Royaume-PC` puis double-cliquer sur `LANCER-JEU.bat`. Le lanceur ouvre le jeu dans le navigateur associé aux fichiers HTML. On peut aussi ouvrir directement `jeu-pc.html` avec Edge, Chrome ou Firefox récent. Aucun serveur, installation ou compte n’est nécessaire pour jouer après le téléchargement. Les polices externes sont retirées de cette édition.
+
+Pour reconstruire le ZIP après une modification du jeu, utiliser `npm run build:pc` (Python 3 est nécessaire uniquement à la fabrication). Le script assemble les sources courantes sans modifier le jeu principal. Le dossier `pc/` et le ZIP sont livrés dans le dépôt pour permettre le téléchargement immédiat.
+
+`npm run test:pc` extrait le ZIP dans un chemin contenant des espaces et vérifie le document autonome : rendu du roi, déplacement, pause et absence de requêtes réseau. Le navigateur cloud interdit les navigations `file://` et `data:` par une politique administrateur ; le test charge le document extrait avec `page.setContent`, hors réseau. Le lancement par double-clic et le fichier batch restent à vérifier sur une machine Windows réelle.

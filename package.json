@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test tests/server.test.js",
-    "test:browser": "node --test tests/mobile.browser.cjs"
+    "test:browser": "node --test tests/mobile.browser.cjs",
+    "build:pc": "python3 scripts/build-pc.py",
+    "test:pc": "node --test tests/pc.browser.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"
