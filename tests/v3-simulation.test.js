@@ -9,7 +9,7 @@ function clearSite(s,type,points){for(const [x,y]of points)if(placementStatus(s,
 const sites=[[-100,200],[100,230],[500,-100],[850,460],[1000,280],[500,750],[-100,500],[1100,350],[1000,-100],[300,800],[750,800]];
 function addBuilding(s,type,x,y,{complete=true,level=1}={}){const def=BUILDINGS[type],b={id:'fixture-'+s.buildings.length,type,x,y,rotation:0,level,complete,progress:complete?def.work:0,work:def.work,hp:150,maxHp:150};s.buildings.push(b);return b;}
 
-test('V6 arrivals are unassigned and the king chooses their actual profession',()=>{
+test('V3 arrivals are unassigned and the king chooses their actual profession',()=>{
   const s=world();assert.equal(addResident(s,'rescued'),true);const p=s.allies[0];assert.equal(p.job,'unassigned');assert.equal(p.role,'survivor');
   assert.equal(assignJob(s,p.id,'worker').ok,true);assert.equal(p.job,'worker');assert.equal(assignJob(s,p.id,'potato').ok,false);
   assert.equal(assignJob(s,p.id,'inventor').ok,false);assert.equal(p.job,'worker');

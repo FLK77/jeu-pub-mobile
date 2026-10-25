@@ -46,7 +46,7 @@ async function tab(page,key){await page.locator('[data-tab="'+key+'"]').click();
 
 // Keep related checks in shared contexts to avoid recompiling the large 3D scene
 // for every small assertion on software-only CI graphics.
-test('V6 customization persists; the full viewport and management tabs work on nine sizes',async t=>{
+test('V3 customization persists; the full viewport and management tabs work on nine sizes',async t=>{
   const page=await open(t,{width:1280,height:900,mobile:false,start:false});
   assert.equal(await page.evaluate(()=>__gameTest.state.time),0,'creation screen freezes the expedition');
   await page.locator('#king-name').fill('Aelys');await page.locator('#appearance-beard').selectOption('long');await page.locator('#appearance-crown').selectOption('spiked');

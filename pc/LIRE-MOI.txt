@@ -1,6 +1,6 @@
-COURVANE - V6.0.0 - PC 3D
+COURVANE - V3.0.0 - PC 3D
 
-1. Extraire tout le ZIP Courvane-PC-V6.zip.
+1. Extraire tout le ZIP Courvane-PC-V3.zip.
 2. Ouvrir le dossier Courvane-PC.
 3. Double-cliquer sur LANCER-JEU.bat.
 

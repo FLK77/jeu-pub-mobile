@@ -30,7 +30,7 @@ if re.search(r'<(?:script|link)\b[^>]*(?:src|href)=',html):
 )
 (OUTPUT/'LIRE-MOI.txt').write_text(
     f'COURVANE - V{VERSION} - PC 3D\n\n'
-    '1. Extraire tout le ZIP Courvane-PC-V6.zip.\n'
+    '1. Extraire tout le ZIP Courvane-PC-V3.zip.\n'
     '2. Ouvrir le dossier Courvane-PC.\n'
     '3. Double-cliquer sur LANCER-JEU.bat.\n\n'
     'Vous pouvez aussi ouvrir directement jeu-pc.html avec Edge, Chrome ou Firefox recent.\n'

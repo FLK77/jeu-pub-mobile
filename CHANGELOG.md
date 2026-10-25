@@ -1,8 +1,8 @@
 # Historique
 
-## V6.0.0 — Courvane
+## V3.0.0 — Courvane
 
-La numérotation passe directement de V2 à V6 à la demande du joueur.
+Renommage de la version courante en V3, sans modification de ses fonctionnalités.
 
 - Nouveau nom et direction artistique royale : toits bleus, tours, fourrure, barbe, gemmes et couronnes.
 - Personnalisation du roi au lancement avec aperçu 3D.
@@ -14,7 +14,7 @@ La numérotation passe directement de V2 à V6 à la demande du joueur.
 - Placement libre des maisons, remparts, fermes, forges, trésoreries et académies ; rotation, chantiers, améliorations et retrait.
 - Trois recherches fonctionnelles et conseil de gestion réunissant les indicateurs essentiels.
 - Nouveaux réfugiés après exploration des camps initiaux, avec délais et contrôles de capacité.
-- Paquet PC hors ligne Courvane-PC-V6.zip ; archives V1 et V2 conservées.
+- Paquet PC hors ligne Courvane-PC-V3.zip ; archives V1 et V2 conservées.
 
 ## V2.0.0 — L’Aube de Valdor
 

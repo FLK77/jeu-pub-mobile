@@ -1,10 +1,10 @@
-# Courvane · V6.0.0
+# Courvane · V3.0.0
 
-**Bâtissez votre héritage.** Après la chute de Valdor, personnalisez votre souverain, retrouvez son peuple, attribuez ses métiers et reconstruisez un royaume en 3D. La V6 ajoute l’économie, l’expérience, les salaires, les recherches et le placement libre aux bases d’exploration de la V2.
+**Bâtissez votre héritage.** Après la chute de Valdor, personnalisez votre souverain, retrouvez son peuple, attribuez ses métiers et reconstruisez un royaume en 3D. La V3 ajoute l’économie, l’expérience, les salaires, les recherches et le placement libre aux bases d’exploration de la V2.
 
 ## Jouer sur PC
 
-1. Télécharger **Courvane-PC-V6.zip** et choisir **Extraire tout**.
+1. Télécharger **Courvane-PC-V3.zip** et choisir **Extraire tout**.
 2. Ouvrir le dossier **Courvane-PC**.
 3. Double-cliquer sur **LANCER-JEU.bat**, ou ouvrir `jeu-pc.html` avec Edge, Chrome ou Firefox récent.
 
@@ -33,7 +33,7 @@ Les places proviennent seulement des logements achevés. Les engagements et voya
 
 Les habitants, le roi et le royaume ont chacun une progression en XP et en niveaux. À partir du niveau 3 du royaume ou de dix habitants, les travailleurs attendent un salaire toutes les minutes de jeu actif. Le menu affiche coûts, motivation, efficacité, réserves alimentaires et alertes. Les inventeurs se débloquent au niveau 4 avec une académie, puis produisent du savoir et développent les technologies.
 
-Les mécanismes, coûts, remboursements et limites sont détaillés dans [DESIGN-V6.md](DESIGN-V6.md). La disponibilité du nouveau nom est documentée dans [NAME-RESEARCH.md](NAME-RESEARCH.md) : aucune occurrence trouvée dans la recherche GitHub accessible, mais les catalogues de jeux ont été bloqués par le réseau. L’exclusivité du nom n’est pas affirmée.
+Les mécanismes, coûts, remboursements et limites sont détaillés dans [DESIGN-V3.md](DESIGN-V3.md). La disponibilité du nouveau nom est documentée dans [NAME-RESEARCH.md](NAME-RESEARCH.md) : aucune occurrence trouvée dans la recherche GitHub accessible, mais les catalogues de jeux ont été bloqués par le réseau. L’exclusivité du nom n’est pas affirmée.
 
 ## Développement
 
@@ -56,7 +56,7 @@ Port 3000 par défaut ; `PORT=3200 npm start` permet un autre port. Chaque tâch
 - `game.js`, `index.html`, `style.css` : interface, personnalisation, commandes et placement.
 - `brand.js` : nom et version du jeu.
 
-`npm run build` assemble ces modules et Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le document autonome et `Courvane-PC-V6.zip`. `Courvane-PC.zip` et `Royaume-PC.zip` sont des alias de la version courante. Les archives V1/V2 et leurs tags sont conservés. La numérotation passe directement de V2 à V6 à la demande du joueur.
+`npm run build` assemble ces modules et Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le document autonome et `Courvane-PC-V3.zip`. `Courvane-PC.zip` et `Royaume-PC.zip` sont des alias de la version courante. Les archives V1/V2 et leurs tags sont conservés. La version courante est renommée V3 sans modification de ses fonctionnalités.
 
 Les modèles sont des créations procédurales originales inspirées des images transmises, sans reprise de leurs fichiers ni de leurs filigranes. Les parties statiques sont regroupées avec couleurs de sommets, les arbres instanciés par secteurs et niveaux de détail. La licence de Three.js est incluse dans l’archive.
 

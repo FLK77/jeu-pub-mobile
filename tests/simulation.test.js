@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createGame,stepGame,interact,buy,addResident,quotas,population,distance,collide,objective} from '../simulation.js';
 import {HOME,HORSE_START,WORLD,FOREST_TREES} from '../world-data.js';
 
-// Exploration and combat regressions from V2. V6 economy/building rules have
+// Exploration and combat regressions from V2. V3 economy/building rules have
 // their own focused suite; these tests keep the old adventure usable.
 test('start alone in an open forest with a nearby horse and a genuine quiet interval',()=>{
   const s=createGame(77);assert.equal(population(s),0);assert.equal(s.phase,'peace');assert.ok(distance(s.king,HORSE_START)<250);

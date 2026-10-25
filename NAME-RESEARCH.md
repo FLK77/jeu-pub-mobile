@@ -1,4 +1,4 @@
-# Nom retenu pour la V6 : Courvane
+# Nom retenu pour la V3 : Courvane
 
 Vérification effectuée le **25 octobre 2026**.
 

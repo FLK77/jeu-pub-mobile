@@ -1,6 +1,6 @@
-# Courvane — V6.0.0
+# Courvane — V3.0.0
 
-La V6 reprend l’exploration et la reconstruction de Valdor et ajoute une véritable boucle de gestion. Le nouveau titre est **Courvane** ; les contrôles de nom et leurs limites figurent dans [NAME-RESEARCH.md](NAME-RESEARCH.md). La numérotation passe directement de la V2 à la V6 à la demande du joueur ; aucune V3–V5 publiée n’est prétendue.
+La V3 reprend l’exploration et la reconstruction de Valdor et ajoute une véritable boucle de gestion. Le nouveau titre est **Courvane** ; les contrôles de nom et leurs limites figurent dans [NAME-RESEARCH.md](NAME-RESEARCH.md). La version courante est renommée V3 sans modification de ses fonctionnalités.
 
 ## Souverain personnalisable
 
@@ -37,7 +37,7 @@ Les réserves sont : pièces, bois, pierre, nourriture, fer, armes et savoir. Le
 
 Les salaires deviennent nécessaires au **niveau 3 du royaume ou à 10 habitants**. Une paie a lieu toutes les 60 secondes de jeu actif ; le salaire est réglable de 1 à 20 pièces par habitant affecté. Les impayés font baisser la motivation et donc l’efficacité. Le tableau affiche la prochaine paie, la trésorerie disponible, le dernier versement et les **impayés cumulés** (historique, pas un prêt remboursable). Les trésoreries achevées génèrent une recette commerciale en temps de paix.
 
-Le manque de nourriture et de motivation ralentit le royaume. Une efficacité minimale subsiste pour permettre de rétablir la production après une crise ; aucun départ irréversible n’est simulé dans cette V6.
+Le manque de nourriture et de motivation ralentit le royaume. Une efficacité minimale subsiste pour permettre de rétablir la production après une crise ; aucun départ irréversible n’est simulé dans cette V3.
 
 ## Expérience et savoir
 
@@ -52,4 +52,4 @@ Le menu rassemble : logements et places réservées, ressources, nourriture effe
 
 ## Limites
 
-La V6 développe la première région et sa gestion. La conquête territoriale des royaumes rivaux et la sauvegarde entre sessions ne sont pas encore disponibles. Le lanceur Windows ouvre le fichier HTML autonome ; ce n’est pas une application native installée. Les tests cloud ne certifient ni les performances ni le lancement sur chaque PC Windows ou iPhone réel. L’absence d’un jeu existant appelé Courvane ne peut pas être certifiée avec les seuls catalogues accessibles ici.
+La V3 développe la première région et sa gestion. La conquête territoriale des royaumes rivaux et la sauvegarde entre sessions ne sont pas encore disponibles. Le lanceur Windows ouvre le fichier HTML autonome ; ce n’est pas une application native installée. Les tests cloud ne certifient ni les performances ni le lancement sur chaque PC Windows ou iPhone réel. L’absence d’un jeu existant appelé Courvane ne peut pas être certifiée avec les seuls catalogues accessibles ici.
