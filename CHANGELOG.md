@@ -1,5 +1,15 @@
 # Historique
 
+## V4.0.0 — La renaissance visuelle
+
+- Roi et habitants remodelés : membres arrondis et articulés, visage sculpté, yeux, mèches de cheveux/barbe courbes, cape drapée, couronnes ouvragées et équipements détaillés.
+- Atlas peint original pour prairie, terre, ardoise, chêne, enduit et pierre ; relief et rugosité mesurés, fibres de tissu et grain du cuir.
+- Maisons et monuments avec toits incurvés, portes/fenêtres cintrées, menuiseries et détails de métier ; cheval aux formes arrondies.
+- Forêt aux silhouettes variées, troncs courbés, fougères et fleurs ; sol et sentier aux bords fondus.
+- Lumière solaire chaude, remplissage du ciel et reflets doux sur les métaux ; portrait de création avec fond de studio.
+- Instanciation, niveaux de détail, regroupement des surfaces et résolution plafonnée conservés pour le mobile. Atlas intégré à l’édition PC hors ligne.
+- Version du paquet **Courvane-PC-V4.zip**. Les règles de progression de la V3 et ses archives sont conservées.
+
 ## V3.0.0 — Courvane
 
 Renommage de la version courante en V3, sans modification de ses fonctionnalités.

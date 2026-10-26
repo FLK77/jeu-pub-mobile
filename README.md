@@ -1,10 +1,14 @@
-# Courvane · V3.0.0
+# Courvane · V4.0.0
 
-**Bâtissez votre héritage.** Après la chute de Valdor, personnalisez votre souverain, retrouvez son peuple, attribuez ses métiers et reconstruisez un royaume en 3D. La V3 ajoute l’économie, l’expérience, les salaires, les recherches et le placement libre aux bases d’exploration de la V2.
+**Bâtissez votre héritage.** Après la chute de Valdor, personnalisez votre souverain, retrouvez son peuple, attribuez ses métiers et reconstruisez un royaume en 3D. La V4 refond la direction artistique : personnages sculptés, matériaux peints, architecture aux lignes courbes, forêt plus naturelle et éclairage doux. Les systèmes de royaume de la V3 sont conservés.
+
+![Village Courvane V4](docs/v4-village.png)
+
+Capture réelle de la scène de validation avec six métiers et dix ouvrages. [Voir le nouveau roi et sa personnalisation](docs/v4-portrait.png).
 
 ## Jouer sur PC
 
-1. Télécharger **Courvane-PC-V3.zip** et choisir **Extraire tout**.
+1. Télécharger **Courvane-PC-V4.zip** et choisir **Extraire tout**.
 2. Ouvrir le dossier **Courvane-PC**.
 3. Double-cliquer sur **LANCER-JEU.bat**, ou ouvrir `jeu-pc.html` avec Edge, Chrome ou Firefox récent.
 
@@ -51,12 +55,13 @@ Port 3000 par défaut ; `PORT=3200 npm start` permet un autre port. Chaque tâch
 - `kingdom-data.js` : métiers, ouvrages, recherches et coûts.
 - `world-data.js` : région, camps, lieux, forêt et index spatial.
 - `world3d.js` : scène, caméra, animation, secteurs et niveaux de détail.
-- `royal-models.js` : modèles royaux, métiers et constructions.
-- `painted-textures.js` : textures originales générées localement.
+- `royal-models.js` : personnages sculptés, visages, coiffures, vêtements et équipements.
+- `royal-architecture.js` : bâtiments, ouvertures cintrées et toitures courbes.
+- `painted-textures.js`, `art-assets.js`, `assets/` : atlas peint original et cartes de relief/rugosité locales.
 - `game.js`, `index.html`, `style.css` : interface, personnalisation, commandes et placement.
 - `brand.js` : nom et version du jeu.
 
-`npm run build` assemble ces modules et Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le document autonome et `Courvane-PC-V3.zip`. `Courvane-PC.zip` et `Royaume-PC.zip` sont des alias de la version courante. Les archives V1/V2 et leurs tags sont conservés. La version courante est renommée V3 sans modification de ses fonctionnalités.
+`npm run build` assemble ces modules et Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le document autonome et `Courvane-PC-V4.zip`. `Courvane-PC.zip` et `Royaume-PC.zip` sont des alias de la version courante. Les archives V1/V2/V3 et leurs tags sont conservés. Le détail de la refonte visuelle figure dans [DESIGN-V4.md](DESIGN-V4.md). L’atlas est inclus dans le script assemblé : aucun téléchargement d’image au lancement.
 
 Les modèles sont des créations procédurales originales inspirées des images transmises, sans reprise de leurs fichiers ni de leurs filigranes. Les parties statiques sont regroupées avec couleurs de sommets, les arbres instanciés par secteurs et niveaux de détail. La licence de Three.js est incluse dans l’archive.
 
@@ -66,9 +71,12 @@ Les modèles sont des créations procédurales originales inspirées des images 
 npm test
 npm run test:browser
 npm run test:pc
+npm run test:graphics
 ```
 
 Les tests couvrent les anciennes mécaniques (cheval, exploration, escortes, assauts), puis la hache, la capacité, les réservations, les six métiers, la construction, les améliorations, les ressources, les salaires, les niveaux et les recherches. Les tests navigateur exercent le formulaire, les menus, les choix de métiers, les emplacements réels sur le terrain, les boutons tactiles et les neuf formats d’écran.
+
+Le test graphique construit un village représentatif avec les six métiers et dix ouvrages, compare les silhouettes et les personnalisations, vérifie le chargement de l’atlas, la stabilité des images en pause, les ressources GPU après reconstructions et le cadrage mobile. Les captures et compteurs sont écrits dans `/tmp/courvane-v4-qa`. Une référence V3 peut être fournie avec `GRAPHICS_BASELINE_ROOT`. Ces compteurs ne mesurent pas la fluidité d’un téléphone réel.
 
 Le test PC extrait le ZIP dans un chemin contenant des espaces, vérifie sa version et le script exact, puis exerce l’édition en mode hors réseau. La politique du navigateur cloud bloque `file://` et `data:` : le document extrait est testé via `page.setContent`. Le batch et le double-clic Windows doivent encore être confirmés sur un appareil réel. Les essais matériels iPhone restent également nécessaires. Les entrées sont dimensionnées pour le toucher ; sur mobile, leurs caractères restent à 16 px pour éviter le zoom automatique de Safari.
 

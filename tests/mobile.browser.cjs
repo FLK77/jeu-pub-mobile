@@ -18,7 +18,7 @@ finishWork:seconds=>{for(const p of state.allies)if(p.job==='builder'){const b=s
 placeStatus:(type,x,y,rotation=0)=>qaStatus(state,type,x,y,rotation),
 prepareInventor:()=>{state.kingdomLevel=4;state.xp=600;const person=state.allies.find(p=>p.job==='inventor'),b=state.buildings.find(b=>b.type==='academy'&&b.complete);if(person&&b){person.x=b.x;person.y=b.y+qaBuildings.academy.depth/2+25;}}
 };`;
-const bundle=require('esbuild').buildSync({stdin:{contents:fixtureImports+source+hook,resolveDir:root,sourcefile:'game.js'},bundle:true,write:false,format:'iife',logLevel:'silent'}).outputFiles[0].text;
+const bundle=require('esbuild').buildSync({stdin:{contents:fixtureImports+source+hook,resolveDir:root,sourcefile:'game.js'},bundle:true,write:false,format:'iife',loader:{'.png':'dataurl'},logLevel:'silent'}).outputFiles[0].text;
 let browser,server;
 before(async()=>{
   server=spawn(process.execPath,['server.js'],{cwd:root,env:{...process.env,PORT:'3103'}});
@@ -46,7 +46,7 @@ async function tab(page,key){await page.locator('[data-tab="'+key+'"]').click();
 
 // Keep related checks in shared contexts to avoid recompiling the large 3D scene
 // for every small assertion on software-only CI graphics.
-test('V3 customization persists; the full viewport and management tabs work on nine sizes',async t=>{
+test('V4 customization persists; the full viewport and management tabs work on nine sizes',async t=>{
   const page=await open(t,{width:1280,height:900,mobile:false,start:false});
   assert.equal(await page.evaluate(()=>__gameTest.state.time),0,'creation screen freezes the expedition');
   await page.locator('#king-name').fill('Aelys');await page.locator('#appearance-beard').selectOption('long');await page.locator('#appearance-crown').selectOption('spiked');

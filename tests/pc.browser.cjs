@@ -7,14 +7,14 @@ const os=require('node:os');
 const {execFileSync}=require('node:child_process');
 const {chromium}=require('playwright');
 
-test('Courvane V3 ZIP contains the exact production game and works without network access',async()=>{
+test('Courvane V4 ZIP contains the exact production game and works without network access',async()=>{
   const root=path.join(__dirname,'..');
   const temp=await fs.mkdtemp(path.join(os.tmpdir(),'Courvane PC '));
   let browser;
   try{
-    execFileSync('python3',['-c','import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None; z.extractall(sys.argv[2])',path.join(root,'Courvane-PC-V3.zip'),temp]);
+    execFileSync('python3',['-c','import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None; z.extractall(sys.argv[2])',path.join(root,'Courvane-PC-V4.zip'),temp]);
     const folder=path.join(temp,'Courvane-PC');
-    assert.equal((await fs.readFile(path.join(folder,'VERSION.txt'),'utf8')).trim(),'Courvane - V3.0.0');
+    assert.equal((await fs.readFile(path.join(folder,'VERSION.txt'),'utf8')).trim(),'Courvane - V4.0.0');
     const batch=await fs.readFile(path.join(folder,'LANCER-JEU.bat'),'utf8');
     assert.ok(batch.includes('start "" "%~dp0jeu-pc.html"'));
     const launch={headless:true,args:['--no-sandbox']};
@@ -35,7 +35,7 @@ test('Courvane V3 ZIP contains the exact production game and works without netwo
     const packedScript=(await fs.readFile(path.join(root,'game.bundle.js'),'utf8')).replaceAll('</script','<\\/script');
     assert.ok(html.toString('utf8').includes(packedScript),'archive contains the exact tested production script');
     await page.setViewportSize({width:390,height:844});await page.waitForTimeout(150);
-    await page.screenshot({path:'/tmp/courvane-v3-mobile-creation.png'});
+    await page.screenshot({path:'/tmp/courvane-v4-mobile-creation.png'});
     await page.setViewportSize({width:1280,height:900});
     await page.locator('#king-name').fill('Ysée');await page.locator('#appearance-beard').selectOption('short');
     const cape=await page.locator('#appearance-cape option').last().getAttribute('value');await page.locator('#appearance-cape').selectOption(cape);
@@ -49,7 +49,7 @@ test('Courvane V3 ZIP contains the exact production game and works without netwo
     await page.keyboard.press('Space');assert.equal(await page.locator('#menu').isVisible(),true);
     await page.locator('[data-tab=residents]').click();assert.equal(await page.locator('#citizen-list').isVisible(),true);
     await page.locator('#resume').click();assert.equal(await page.locator('#menu').isVisible(),false);
-    await page.screenshot({path:'/tmp/courvane-v3-pc.png'});
+    await page.screenshot({path:'/tmp/courvane-v4-pc.png'});
     assert.deepEqual(network,[],'no external requests needed');assert.deepEqual(errors,[]);
   }finally{
     if(browser)await browser.close();await fs.rm(temp,{recursive:true,force:true});

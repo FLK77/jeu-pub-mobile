@@ -1,0 +1,7 @@
+# Matériaux originaux de Courvane V4
+
+`v4-material-atlas.png` est un atlas original généré pour ce projet le 25 octobre 2026 avec l’outil de génération d’images OpenAI. Il ne contient ni extrait des références du joueur, ni logo, ni filigrane.
+
+Format : 1536 × 1024 pixels, six carreaux de 512 × 512. De gauche à droite : prairie, terre, ardoise bleue ; chêne, enduit ivoire, maçonnerie.
+
+`painted-textures.js` découpe ces carreaux en mémoire, prépare leurs raccords et leurs canaux physiques. `art-assets.js` les importe dans le paquet esbuild pour permettre le fonctionnement hors ligne du jeu PC.
