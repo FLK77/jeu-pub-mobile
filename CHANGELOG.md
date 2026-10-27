@@ -1,5 +1,16 @@
 # Historique
 
+## V5.5.0 — Refonte des personnages et animaux
+
+- Proportions adultes, visages sculptés, paupières, nez et mâchoires redessinés pour le roi, les habitants et les ennemis.
+- Casque couronné, fourrure en mèches, cotte de mailles, gambison et tabard fendu ; silhouettes et équipements propres aux métiers.
+- Cheval remodelé : encolure, cage thoracique, croupe, tête allongée, yeux latéraux, sabots et crins ; selle, tapis matelassé, brides et étriers séparés.
+- Cochons remodelés avec museau allongé, oreilles tombantes et sabots fendus.
+- Troisième atlas original : mailles, tissu matelassé, poil court, peau, cuir fin et acier, avec canaux de relief et de rugosité.
+- Lin uni à trame fine pour les capes et tuniques, distinct du tissu brodé de la V5.
+- Posture du cavalier adaptée aux nouvelles proportions, avec genoux articulés.
+- Paquet PC autonome **Cendrune-PC-V5.5.zip** ; ancien paquet **Cendrune-PC-V5.zip** conservé, alias de téléchargement actualisés.
+
 ## V5.0.0 — Cendrune
 
 - Nouveau nom proposé : Cendrune ; nom du royaume choisi par le joueur, styles royaux, coiffures, yeux, emblèmes et robes de cheval supplémentaires.

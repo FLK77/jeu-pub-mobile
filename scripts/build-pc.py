@@ -9,6 +9,8 @@ ROOT=Path(__file__).resolve().parent.parent
 OUTPUT=ROOT/'pc'
 OUTPUT.mkdir(exist_ok=True)
 VERSION=json.loads((ROOT/'package.json').read_text())['version']
+major,minor=VERSION.split('.')[:2]
+RELEASE=f'{major}.{minor}' if minor!='0' else major
 NAME='Cendrune'
 html=(ROOT/'index.html').read_text(encoding='utf-8')
 css=(ROOT/'style.css').read_text(encoding='utf-8')
@@ -30,7 +32,7 @@ if re.search(r'<(?:script|link)\b[^>]*(?:src|href)=',html):
 )
 (OUTPUT/'LIRE-MOI.txt').write_text(
     f'CENDRUNE - V{VERSION} - PC 3D\n\n'
-    f'1. Extraire tout le ZIP Cendrune-PC-V{VERSION.split(".")[0]}.zip.\n'
+    f'1. Extraire tout le ZIP Cendrune-PC-V{RELEASE}.zip.\n'
     '2. Ouvrir le dossier Cendrune-PC.\n'
     '3. Double-cliquer sur LANCER-JEU.bat.\n\n'
     'Vous pouvez aussi ouvrir directement jeu-pc.html avec Edge, Chrome ou Firefox recent.\n'
@@ -53,7 +55,7 @@ if re.search(r'<(?:script|link)\b[^>]*(?:src|href)=',html):
     'La partie n est pas encore sauvegardee a la fermeture.\n',encoding='utf-8')
 (OUTPUT/'VERSION.txt').write_text(f'{NAME} - V{VERSION}\n',encoding='utf-8')
 (OUTPUT/'THIRD-PARTY-NOTICES.txt').write_bytes((ROOT/'THIRD-PARTY-NOTICES.txt').read_bytes())
-archive_path=ROOT/f'Cendrune-PC-V{VERSION.split(".")[0]}.zip'
+archive_path=ROOT/f'Cendrune-PC-V{RELEASE}.zip'
 with ZipFile(archive_path,'w',compression=ZIP_DEFLATED) as archive:
     for name in ['LANCER-JEU.bat','jeu-pc.html','LIRE-MOI.txt','THIRD-PARTY-NOTICES.txt','VERSION.txt']:
         archive.write(OUTPUT/name,'Cendrune-PC/'+name)

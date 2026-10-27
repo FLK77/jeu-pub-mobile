@@ -1,14 +1,17 @@
 import * as THREE from 'three';
-import {MATERIAL_ATLAS_URL,DETAIL_ATLAS_URL} from './art-assets.js';
+import {MATERIAL_ATLAS_URL,DETAIL_ATLAS_URL,ACTOR_ATLAS_URL} from './art-assets.js';
 
 // Original painted maps + restrained physical surface detail. Every map remains
 // local, including in the downloadable single-file edition.
 const SIZE=512;
 const ATLAS_CELLS={grass:[0,0],dirt:[1,0],slate:[2,0],roof:[2,0],wood:[0,1],plaster:[1,1],stone:[2,1]};
 const DETAIL_CELLS={cloth:[0,0],brocade:[0,0],leather:[1,0],fur:[2,0],feather:[2,0],foliage:[0,1],leaf:[0,1],bark:[1,1],metal:[2,1]};
+const ACTOR_CELLS={mail:[0,0],quilt:[1,0],horsehide:[2,0],skin:[0,1],hide:[1,1],steel:[2,1]};
+const actorKind=kind=>Object.hasOwn(ACTOR_CELLS,kind);
+const sheetFor=kind=>['linen','hoof'].includes(kind)?'procedural':actorKind(kind)?'actor':DETAIL_CELLS[kind]?'detail':'world';
 export function createPaintedTextures(renderer){
-  const bases=new Map(),records=new Map();let atlas=null,detailAtlas=null,ready=false,failed=false,detailFailed=false;
-  let pending=Number(!!MATERIAL_ATLAS_URL)+Number(!!DETAIL_ATLAS_URL);
+  const bases=new Map(),records=new Map();let atlas=null,detailAtlas=null,actorAtlas=null,ready=false,failed=false,detailFailed=false,actorFailed=false;
+  let pending=Number(!!MATERIAL_ATLAS_URL)+Number(!!DETAIL_ATLAS_URL)+Number(!!ACTOR_ATLAS_URL);
   let resolveReady;const readyPromise=new Promise(resolve=>{resolveReady=resolve;});
   const makeCanvas=()=>{const c=document.createElement('canvas');c.width=c.height=SIZE;return c;};
   const randomFor=kind=>{let seed=17777;for(const c of kind)seed=(Math.imul(seed,31)+c.charCodeAt(0))>>>0;return()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};};
@@ -44,24 +47,55 @@ export function createPaintedTextures(renderer){
       for(let i=0;i<9;i++)for(const side of [-1,1]){c.lineWidth=2;c.strokeStyle='#c4cbb7';const y=40+i*55;c.beginPath();c.moveTo(middle,y+70);c.quadraticCurveTo(middle+side*90,y+25,middle+side*245,y-35);c.stroke();}
     }else if(kind==='bark'){
       fill('#dcd9cd');for(let i=0;i<35;i++){const x=i*17;c.strokeStyle=i%3?'#77766b54':'#ffffff90';c.lineWidth=3+i%4;c.beginPath();c.moveTo(x,-5);c.bezierCurveTo(x+40,170,x-30,340,x+8,SIZE+5);c.stroke();}
-    }else if(kind==='fur'||kind==='feather'){
-      fill('#e3e0d8');for(let i=0;i<3400;i++){const x=r()*SIZE,y=r()*SIZE;c.strokeStyle=i%3?'#877e7138':'#fffdf2a0';c.lineWidth=.5+r();c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+5,y+4,x+2,y+12+r()*12);c.stroke();}
+    }else if(kind==='fur'||kind==='feather'||kind==='horsehide'){
+      const short=kind==='horsehide';fill(short?'#d9d9d5':'#e3e0d8');for(let i=0;i<(short?8500:3400);i++){const x=r()*SIZE,y=r()*SIZE;c.strokeStyle=i%3?'#877e7138':'#fffdf2a0';c.lineWidth=short?.35:.5+r();c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+(short?1:5),y+(short?1:4),x+(short?.7:2),y+(short?2+r()*3:12+r()*12));c.stroke();}
     }else if(kind==='foliage'){
       fill('#e1e4d1');for(let i=0;i<200;i++){const x=r()*SIZE,y=r()*SIZE,a=r()*Math.PI;ellipse(x,y,4+r()*9,2+r()*4,i%2?'#9cac8852':'#fcf5d355',a);c.strokeStyle='#7c946229';c.lineWidth=.7;c.beginPath();c.moveTo(x-Math.cos(a)*5,y-Math.sin(a)*5);c.lineTo(x+Math.cos(a)*6,y+Math.sin(a)*6);c.stroke();}
-    }else if(kind==='cloth'||kind==='brocade'){
+    }else if(kind==='mail'){
+      fill('#a8aaa7');
+      // Four-in-one ring rows repeat exactly at the tile boundary.
+      for(let row=-1;row<=32;row++)for(let col=-1;col<=32;col++){
+        const x=col*16+(row%2)*8,y=row*16;
+        c.lineWidth=3;c.strokeStyle='#666b69';c.beginPath();c.ellipse(x,y+1,8,6,-.3,0,Math.PI*2);c.stroke();
+        c.lineWidth=1.7;c.strokeStyle='#e1e3dc';c.beginPath();c.ellipse(x,y,7,5,-.3,Math.PI*.95,Math.PI*2.05);c.stroke();
+      }
+    }else if(kind==='linen'){
+      // A fine plain weave for adult-scale tailoring. Its periodic microthreads
+      // tile cleanly; the small value range avoids embroidered/checkered cloth.
+      const image=c.createImageData(SIZE,SIZE),data=image.data,tau=Math.PI*2;
+      for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++){
+        const over=(Math.floor(x/2)+Math.floor(y/2))%2;
+        const warp=Math.sin((x+.25)*Math.PI),weft=Math.cos((y+.25)*Math.PI);
+        const fold=Math.sin(x/SIZE*tau*3)*Math.sin(y/SIZE*tau)*.65+Math.cos((x+y)/SIZE*tau*2)*.45;
+        const value=235+(over?warp*2.3+weft*.7:weft*2.3+warp*.7)+fold+(r()-.5)*1.2,i=(y*SIZE+x)*4;
+        data[i]=data[i+1]=data[i+2]=value;data[i+3]=255;
+      }
+      c.putImageData(image,0,0);
+    }else if(kind==='cloth'||kind==='brocade'||kind==='quilt'){
       fill('#eee9db');for(let i=0;i<SIZE;i+=3){c.strokeStyle=i%2?'#5b5b5717':'#ffffff24';c.lineWidth=.55;c.beginPath();c.moveTo(i,0);c.lineTo(i,SIZE);c.moveTo(0,i);c.lineTo(SIZE,i);c.stroke();}
       const grad=c.createLinearGradient(0,0,SIZE,0);grad.addColorStop(0,'#a9a6a40a');grad.addColorStop(.5,'#ffffff12');grad.addColorStop(1,'#a9a6a40a');c.fillStyle=grad;c.fillRect(0,0,SIZE,SIZE);
-    }else if(kind==='leather'){
+      if(kind==='quilt')for(let d=-SIZE;d<SIZE*2;d+=64)for(const sign of [-1,1]){
+        c.strokeStyle='#77766e42';c.lineWidth=3;c.beginPath();c.moveTo(d,0);c.lineTo(d+sign*SIZE,SIZE);c.stroke();
+        c.strokeStyle='#ffffff90';c.lineWidth=1;c.beginPath();c.moveTo(d+3,0);c.lineTo(d+sign*SIZE+3,SIZE);c.stroke();
+      }
+    }else if(kind==='leather'||kind==='hide'){
       fill('#e5dacc');for(let i=0;i<3000;i++)ellipse(r()*SIZE,r()*SIZE,.4+r()*1.7,.3+r(),i%3?'#6d584318':'#fff4d82d');
       for(let i=0;i<50;i++){c.strokeStyle='#76593c15';c.lineWidth=.8;c.beginPath();const x=r()*SIZE,y=r()*SIZE;c.moveTo(x,y);c.quadraticCurveTo(x+15,y+8,x+23,y-2);c.stroke();}
+    }else if(kind==='hoof'){
+      fill('#e7e5de');
+      for(let i=0;i<240;i++){
+        const x=i*SIZE/240;c.strokeStyle=i%3?'#817c7024':'#fffdf33a';c.lineWidth=.4+r()*.6;
+        c.beginPath();c.moveTo(x,-1);c.bezierCurveTo(x+1.6,170,x-1.6,340,x,SIZE+1);c.stroke();
+      }
+      for(let i=0;i<26;i++){const y=i*SIZE/26;c.strokeStyle='#80796a0b';c.lineWidth=.6;c.beginPath();c.moveTo(0,y);c.lineTo(SIZE,y);c.stroke();}
     }else if(kind==='skin'){
-      fill('#f8f3eb');for(let i=0;i<2400;i++)ellipse(r()*SIZE,r()*SIZE,.3+r()*.6,.3+r()*.5,i%2?'#c7aa9710':'#ffffff18');
-    }else if(kind==='metal'){
+      fill('#eeeae4');for(let i=0;i<3600;i++)ellipse(r()*SIZE,r()*SIZE,.35+r()*.7,.3+r()*.6,i%2?'#a5958750':'#ffffff40');
+    }else if(kind==='metal'||kind==='steel'){
       fill('#ebedeb');for(let i=0;i<600;i++){c.strokeStyle=i%2?'#89948d17':'#ffffff3a';c.lineWidth=.3+r()*.6;const y=r()*SIZE;c.beginPath();c.moveTo(0,y);c.lineTo(SIZE,y+r()*2);c.stroke();}
     }else fill('#ece7da');
   }
   function drawColor(base,kind){
-    const sheet=DETAIL_CELLS[kind]?detailAtlas:atlas,cell=DETAIL_CELLS[kind]||ATLAS_CELLS[kind];
+    const sheet=actorKind(kind)?actorAtlas:DETAIL_CELLS[kind]?detailAtlas:atlas,cell=ACTOR_CELLS[kind]||DETAIL_CELLS[kind]||ATLAS_CELLS[kind];
     if(sheet&&cell){
       const[col,row]=cell,tw=sheet.naturalWidth/3,th=sheet.naturalHeight/2,c=base.color.getContext('2d');
       c.clearRect(0,0,SIZE,SIZE);c.drawImage(sheet,col*tw,row*th,tw,th,0,0,SIZE,SIZE);
@@ -73,13 +107,29 @@ export function createPaintedTextures(renderer){
       for(let n=0;n<edge;n++){const weight=(1-n/edge)**2;for(let x=0;x<SIZE;x++)join((n*SIZE+x)*4,((SIZE-1-n)*SIZE+x)*4,weight);}
       c.putImageData(pixels,0,0);
     }else fallback(kind,base.color);
+    if(actorKind(kind)){
+      // Keep the generated microrelief for the physical channels, but neutralize
+      // the albedo so the player's skin/coat/clothing colors stay their own.
+      const c=base.color.getContext('2d'),pixels=c.getImageData(0,0,SIZE,SIZE),data=pixels.data;
+      base.relief=new Float32Array(SIZE*SIZE);
+      const response={mail:[218,155,.4],quilt:[232,184,.45],horsehide:[230,180,.35],skin:[239,210,.16],hide:[225,170,.4],steel:[225,168,.4]}[kind];
+      for(let i=0;i<data.length;i+=4){
+        const lum=data[i]*.2126+data[i+1]*.7152+data[i+2]*.0722;
+        base.relief[i/4]=lum;const neutral=Math.max(110,Math.min(250,response[0]+(lum-response[1])*response[2]));
+        data[i]=data[i+1]=data[i+2]=neutral;
+      }
+      c.putImageData(pixels,0,0);
+    }
     updateChannels(base,kind);
   }
   function updateChannels(base,kind){
     const color=base.color.getContext('2d').getImageData(0,0,SIZE,SIZE),height=base.bump.getContext('2d').createImageData(SIZE,SIZE),rough=base.roughness.getContext('2d').createImageData(SIZE,SIZE);
-    const r=randomFor(kind+'-physical');const target=kind==='metal'?95:kind==='skin'?175:kind==='leather'?180:kind==='slate'?195:['cloth','brocade'].includes(kind)?232:['fur','feather'].includes(kind)?215:238;
-    for(let i=0;i<color.data.length;i+=4){const lum=color.data[i]*.2126+color.data[i+1]*.7152+color.data[i+2]*.0722;
-      const bump=kind==='skin'?128+(lum-245)*.1:Math.max(50,Math.min(220,128+(lum-170)*.8));const roughness=Math.max(0,Math.min(255,target+(r()-.5)*7+(kind==='metal'?(220-lum)*.22:0)));
+    const r=randomFor(kind+'-physical');const targets={mail:138,quilt:232,linen:232,hoof:155,horsehide:128,skin:180,hide:167,steel:102};
+    const target=targets[kind]??(kind==='metal'?95:kind==='leather'?180:kind==='slate'?195:['cloth','brocade'].includes(kind)?232:['fur','feather'].includes(kind)?215:238);
+    for(let i=0;i<color.data.length;i+=4){const lum=base.relief?.[i/4]??(color.data[i]*.2126+color.data[i+1]*.7152+color.data[i+2]*.0722);
+      const strength={mail:1.5,quilt:.8,linen:.65,horsehide:.24,skin:.22,hide:.55,steel:.3}[kind]??.8;
+      const bump=Math.max(25,Math.min(230,128+(lum-(kind==='linen'?235:actorKind(kind)?180:170))*strength));
+      const roughness=Math.max(0,Math.min(255,target+(r()-.5)*7+(['metal','steel','mail'].includes(kind)?(210-lum)*.18:kind==='horsehide'?(180-lum)*.08:0)));
       for(let j=0;j<3;j++){height.data[i+j]=bump;rough.data[i+j]=roughness;}height.data[i+3]=rough.data[i+3]=255;
     }
     base.bump.getContext('2d').putImageData(height,0,0);base.roughness.getContext('2d').putImageData(rough,0,0);
@@ -94,12 +144,12 @@ export function createPaintedTextures(renderer){
     const key=kind+':'+repeat;if(!records.has(key)){const base=baseFor(kind);records.set(key,{kind,maps:{color:texture(base.color,repeat,true),bump:texture(base.bump,repeat),roughness:texture(base.roughness,repeat)}});}return records.get(key);
   }
   function finish(){pending--;if(pending<=0){ready=true;resolveReady();}}
-  function loadSheet(url,detail){
+  function loadSheet(url,name){
     if(!url)return;const image=new Image();image.onload=()=>{
-      if(detail)detailAtlas=image;else atlas=image;
-      for(const[kind,base]of bases)if(!!DETAIL_CELLS[kind]===detail)drawColor(base,kind);finish();
-    };image.onerror=()=>{if(detail)detailFailed=true;else failed=true;finish();};image.src=url;
+      if(name==='actor')actorAtlas=image;else if(name==='detail')detailAtlas=image;else atlas=image;
+      for(const[kind,base]of bases)if(sheetFor(kind)===name)drawColor(base,kind);finish();
+    };image.onerror=()=>{if(name==='actor')actorFailed=true;else if(name==='detail')detailFailed=true;else failed=true;finish();};image.src=url;
   }
-  loadSheet(MATERIAL_ATLAS_URL,false);loadSheet(DETAIL_ATLAS_URL,true);if(!pending){ready=true;resolveReady();}
-  return{get:(kind,repeat=1)=>recordFor(kind,repeat).maps.color,getBump:(kind,repeat=1)=>recordFor(kind,repeat).maps.bump,getRoughness:(kind,repeat=1)=>recordFor(kind,repeat).maps.roughness,get count(){return records.size;},get ready(){return ready;},get source(){return atlas?'original-painted-atlas':failed?'procedural-fallback':'procedural-painted';},get detailSource(){return detailAtlas?'original-crafted-atlas':detailFailed?'procedural-fallback':'procedural-details';},colored:true,readyPromise};
+  loadSheet(MATERIAL_ATLAS_URL,'world');loadSheet(DETAIL_ATLAS_URL,'detail');loadSheet(ACTOR_ATLAS_URL,'actor');if(!pending){ready=true;resolveReady();}
+  return{get:(kind,repeat=1)=>recordFor(kind,repeat).maps.color,getBump:(kind,repeat=1)=>recordFor(kind,repeat).maps.bump,getRoughness:(kind,repeat=1)=>recordFor(kind,repeat).maps.roughness,get count(){return records.size;},get ready(){return ready;},get source(){return atlas?'original-painted-atlas':failed?'procedural-fallback':'procedural-painted';},get detailSource(){return detailAtlas?'original-crafted-atlas':detailFailed?'procedural-fallback':'procedural-details';},get realismSource(){return actorAtlas?'original-realistic-atlas':actorFailed?'procedural-fallback':'procedural-actors';},colored:true,readyPromise};
 }

@@ -18,7 +18,7 @@ Des sites oubliés se révèlent à l’approche. Leurs gardiens combattent rée
 
 La nouvelle palette accentue les verts lumineux, les contrastes et les accents chauds. Les arbres emploient de véritables groupes de feuilles incurvées, nervures, rameaux et aiguilles ; les niveaux de détail et l’instanciation limitent leur coût sur la grande carte. Les personnages reçoivent des vêtements et accessoires propres aux métiers. Le cheval dispose d’un pelage, d’une sellerie et d’un harnachement plus détaillés.
 
-Sur mobile, les ombres des personnages proviennent des surfaces principales du corps, des membres, de la cape et des outils. Les petits accessoires gardent leur géométrie, leurs textures et leur éclairage dans l’image, sans chacun ajouter un calcul d’ombre. Cette sélection est préparée à la création des modèles. Les textures identiques partagent également leurs cartes pour limiter les transferts et les appels de rendu.
+Les ombres des personnages proviennent des surfaces principales du corps, des membres, de la cape et des outils. Les petits accessoires gardent leur géométrie, leurs textures et leur éclairage dans l’image, sans chacun ajouter un calcul d’ombre. Cette sélection est préparée à la création des modèles ; le PC conserve davantage de surfaces projetantes que le mobile. Les textures identiques partagent également leurs cartes pour limiter les transferts et les appels de rendu.
 
 Le nom du roi et celui du royaume sont distincts. Trois familles de tenues, de coiffures et d’emblèmes complètent les couleurs, les barbes et les couronnes existantes ; les yeux et la robe du cheval deviennent personnalisables. Les valeurs sont validées par la simulation. Les tissus, cuirs, pelages, feuilles, écorces et métaux utilisent un atlas original neutre, coloré par les matériaux du jeu, avec cartes de relief et rugosité locales. Il est intégré au paquet hors ligne avec l’atlas de terrain de la V4.
 
@@ -29,3 +29,7 @@ Le nom **Cendrune** évoque la renaissance depuis les cendres et les mystères �
 Les tests couvrent les anciens systèmes, la visée, les délais des capacités, les changements réels débloqués par l’XP, les découvertes et leurs récompenses uniques. Les contrôles navigateur exercent les interactions, le HUD, la personnalisation, le cadrage, le rendu et l’édition PC hors réseau. Les mesures de complexité graphique dans le navigateur cloud ne sont pas des mesures de fréquence d’image sur un téléphone. Les essais matériels iPhone et Windows restent nécessaires.
 
 La sauvegarde entre sessions et la conquête des royaumes ennemis restent des développements ultérieurs.
+
+## Refonte V5.5
+
+La refonte des personnages et animaux porte le numéro **V5.5.0**. Sa direction artistique, ses matières et les contrôles des nouveaux modèles sont décrits dans [DESIGN-V5.5.md](DESIGN-V5.5.md). Elle conserve les règles et les choix de personnalisation décrits dans ce document. L’archive V5 initiale reste disponible séparément.

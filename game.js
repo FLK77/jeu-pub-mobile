@@ -13,7 +13,7 @@ const compact=new Intl.NumberFormat('fr-FR',{notation:'compact',maximumFractionD
 let targetingPointer=null,lastHeroLevel=state.king.heroLevel,levelRevealTime=0;
 const eventQueue=[];
 for(const element of document.querySelectorAll('[data-icon]'))element.innerHTML=icon(element.dataset.icon);
-document.title=GAME_NAME+' · V'+GAME_VERSION.split('.')[0];
+document.title=GAME_NAME+' · V'+GAME_VERSION.split('.').slice(0,2).join('.');
 const buildingIcons={house:'⌂',wall:'▥',farm:'♧',forge:'⚒',academy:'✧',treasury:'♛'};
 const jobIcons={worker:'⚒',builder:'⌂',knight:'⚔',farmer:'♧',armorer:'⚒',inventor:'✧'};
 const buildingDescriptions={house:'10 places à chaque niveau achevé.',wall:'Un rempart qui protège le royaume.',farm:'Cultures et élevage pour les fermiers.',forge:'Les armuriers y forgent et réparent les armes.',academy:'Un lieu de savoir pour vos inventeurs.',treasury:'Organise la richesse de votre royaume.'};

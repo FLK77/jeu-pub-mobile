@@ -68,8 +68,12 @@ export function createWorld(canvas) {
     if (!materials.has(key)) {
       const tint=new THREE.Color(color);
       if(painted.colored&&['wood','stone','slate','plaster','roof'].includes(surface))tint.lerp(new THREE.Color('#ffffff'),.78);
-      const bumpScale={wood:.025,bark:.055,stone:.035,slate:.04,plaster:.012,foliage:.026,leaf:.026,cloth:.014,brocade:.014,skin:.003,leather:.012,fur:.016,feather:.015,metal:.006}[surface]??.015;
-      materials.set(key,new THREE.MeshStandardMaterial({color:tint,map:surface?painted.get(surface):null,bumpMap:surface?painted.getBump?.(surface):null,bumpScale,roughnessMap:surface&&surface!=='skin'&&!metalness?painted.getRoughness?.(surface):null,flatShading:false,roughness:surface==='skin'?.76:metalness?.32:surface==='leather'?.86:.95,metalness,envMapIntensity:metalness?.85:.28}));
+      const actorSurface=['skin','mail','quilt','horsehide','hide','steel','linen','hoof'].includes(surface);
+      const bumpScale={wood:.025,bark:.055,stone:.035,slate:.04,plaster:.012,foliage:.026,leaf:.026,cloth:.014,brocade:.014,skin:.0015,leather:.012,fur:.016,feather:.015,metal:.006,mail:.012,quilt:.01,linen:.003,hoof:.0015,horsehide:.0025,hide:.007,steel:.003}[surface]??.015;
+      // Actor maps encode their own physical roughness. Multiplying them by
+      // another low constant would turn skin, leather and short coats glossy.
+      const roughness=actorSurface?1:metalness?.32:surface==='leather'?.86:.95;
+      materials.set(key,new THREE.MeshStandardMaterial({color:tint,map:surface?painted.get(surface):null,bumpMap:surface?painted.getBump?.(surface):null,bumpScale,roughnessMap:surface&&(actorSurface||!metalness)?painted.getRoughness?.(surface):null,flatShading:false,roughness,metalness,envMapIntensity:metalness?.85:surface==='horsehide'?.55:.28}));
     }
     return materials.get(key);
   };
@@ -363,21 +367,22 @@ export function createWorld(canvas) {
     for(const r of ranked)if(keep.size<limit)keep.add(r.m);
     for(const {m}of ranked)m.castShadow=keep.has(m);
   }
-  function mobileActorShadows(actor){
-    // All geometry and materials stay in the color pass. Only large silhouette
-    // surfaces cast mobile shadows; stitching, buckles and tool ornament do not
-    // each need another shadow draw. This is evaluated once on model creation.
+  function actorShadows(actor){
+    // Keep the complete model in the color pass. Tiny stitches, rings and
+    // buckles do not need independent shadow draws, even on desktop. The main
+    // articulated surfaces retain their shadows at both quality settings.
     const d=actor.userData,parts=(node)=>{const meshes=[];node?.traverse(m=>{if(m.isMesh)meshes.push(m);});return meshes;};
-    const articulated=new Set([...d.legs,...d.arms,d.cape,d.jobTool,d.weapons,d.health].filter(Boolean)),body=[];
+    const articulated=new Set([...d.legs,...d.arms,...(d.skirtPanels||[]),d.cape,d.jobTool,d.weapons,d.health].filter(Boolean)),body=[];
     actor.traverse(m=>{if(!m.isMesh)return;for(let node=m;node&&node!==actor;node=node.parent)if(articulated.has(node))return;body.push(m);});
-    dominantShadows(body,4,true);
-    for(const limb of [...d.legs,...d.arms])dominantShadows(parts(limb),2);
+    dominantShadows(body,mobile?4:6,true);
+    for(const limb of [...d.legs,...d.arms])dominantShadows(parts(limb),mobile?2:3);
+    for(const panel of d.skirtPanels||[])dominantShadows(parts(panel),1);
     if(d.cape)dominantShadows(parts(d.cape),2);
     if(d.jobTool)dominantShadows(parts(d.jobTool),2);
     for(const weapon of d.weapons?.children||[])dominantShadows(parts(weapon),2);
     for(const m of parts(d.health))m.castShadow=false;
   }
-  const character=(...args)=>{const actor=royal.character(...args);if(mobile)mobileActorShadows(actor);return actor;};
+  const character=(...args)=>{const actor=royal.character(...args);actorShadows(actor);return actor;};
   function tent(parent,x,z,color='#d6c58c'){
     const t=group(parent,x,0,z);
     for(const side of [-1,1]){const cloth=box(t,color,side*.45,.65,0,1.25,.06,1.65);cloth.rotation.z=side*-.8;}
@@ -504,11 +509,24 @@ export function createWorld(canvas) {
     if(facing!==null)g.rotation.y=facing;else if(p.aim!==undefined)g.rotation.y=p.aim;
     d.health.visible=p.maxHp!==undefined&&p.hp<p.maxHp;
     if(d.health.visible){const ratio=Math.max(0,p.hp/p.maxHp);d.healthFill.scale.x=.58*ratio;d.healthFill.position.x=-(1-ratio)*.29;d.health.quaternion.copy(g.quaternion).invert().multiply(camera.quaternion);}
-    d.lastX=x;d.lastZ=z;g.position.set(x,(mounted?1:0)+Math.max(0,Math.sin(time*11+d.phase))*(moving?.065:.008),z);
-    if(d.cape)d.cape.rotation.x=-.1+Math.sin(time*3)*.04;
+    d.lastX=x;d.lastZ=z;d.mounted=mounted;
+    const anatomy=d.anatomy,rideLift=anatomy?.ridingLift??1;
+    g.position.set(x,(mounted?rideLift:0)+Math.max(0,Math.sin(time*10+d.phase))*(moving?.025:.003),z);
+    if(d.cape)d.cape.rotation.x=(mounted?.26:-.1)+Math.sin(time*3)*.025;
     if(d.weapons?.visible){const axe=p.weapon==='axe';d.axe.visible=axe;d.bow.visible=!axe;d.weapons.rotation.x=axe&&p.axeSwing>0?-.15-Math.sin((.32-p.axeSwing)/.32*Math.PI)*1.4:0;d.weapons.rotation.z=axe?-.15:0;}
     if(d.jobTool)d.jobTool.rotation.x=p.job==='knight'&&p.meleeCool>0?Math.sin(time*13)*.5:['worker','builder','farmer','armorer'].includes(p.job)?Math.sin(time*3)*.08:0;
-    for(let i=0;i<2;i++){d.legs[i].position.x=(i?1:-1)*(mounted?.3:.13);d.legs[i].rotation.x=mounted?-.7:moving?Math.sin(time*11+i*Math.PI)*.5:0;d.arms[i].rotation.x=moving?Math.sin(time*11+i*Math.PI)*.15:-.08;}
+    for(let i=0;i<2;i++){
+      const stride=Math.sin(time*10+i*Math.PI),side=i?1:-1;
+      d.legs[i].position.x=side*(mounted?.30:anatomy?.legSpacing??.13);
+      d.legs[i].rotation.x=mounted?-.7:moving?stride*.34:0;
+      d.legs[i].rotation.z=mounted?side*.09:0;
+      if(d.knees?.[i])d.knees[i].rotation.x=mounted?1.10:moving?Math.max(0,-stride)*.48:0;
+      d.arms[i].rotation.x=mounted?-.28:moving?stride*.14:-.06;
+    }
+    for(const panel of d.skirtPanels||[]){
+      panel.rotation.x=mounted?(panel.userData.front?-.45:.25):moving?Math.sin(time*10+panel.userData.side)*.065:0;
+      panel.rotation.z=mounted?panel.userData.side*.28:0;
+    }
   }
   const portraitScene=new THREE.Scene();portraitScene.environment=skyEnvironment.texture;portraitScene.environmentIntensity=.65;
   const portraitBackdrop=document.createElement('canvas');portraitBackdrop.width=portraitBackdrop.height=256;const portraitContext=portraitBackdrop.getContext('2d'),portraitGradient=portraitContext.createRadialGradient(88,104,12,100,118,205);portraitGradient.addColorStop(0,'#617886');portraitGradient.addColorStop(.5,'#304b60');portraitGradient.addColorStop(1,'#15283c');portraitContext.fillStyle=portraitGradient;portraitContext.fillRect(0,0,256,256);portraitScene.background=new THREE.CanvasTexture(portraitBackdrop);portraitScene.background.colorSpace=THREE.SRGBColorSpace;
@@ -653,5 +671,5 @@ export function createWorld(canvas) {
     const v=new THREE.Vector3(wx(x),height,wz(y)).project(camera);
     return{x:(v.x+1)*lastWidth/2,y:(1-v.y)*lastHeight/2,width:lastWidth,height:lastHeight};
   }
-  return{render,project,screenToWorld,targetAt,setPlacement,setPortrait:value=>{portraitMode=!!value;},setZoom:value=>{zoom=Math.max(.45,Math.min(1.5,Number(value)||1));},diagnostics:()=>({renderer:'webgl2',frames,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fortified:fortifications.visible,actors:1+collections.allies.size+collections.enemies.size,coins:collections.coins.size,arrows:collections.arrows.size,forestTrees:FOREST_TREES.length,mounted:!!king.position.y&&king.position.y>.7,followers:collections.followers.size,paintedTextures:painted.count,texturesReady:painted.ready,textureSource:painted.source,detailSource:painted.detailSource,foliageVersion:5,worldArea:(WORLD.maxX-WORLD.minX)*(WORLD.maxY-WORLD.minY),zoom,targeting:aimRoot.visible,targetVisible:aimRoot.visible,targetWorld:aimRoot.visible?{x:aimRoot.position.x*UNIT+500,y:aimRoot.position.z*UNIT+325}:null,horseCoat,animalCoat:horseCoat,discoveries:[...discoveryModels.values()].filter(d=>d.root.visible).length,portrait:portraitMode,equippedWeapon:stateWeapon(),placedBuildings:collections.buildings.size,harvested:collections.stumps.size,kingBodyDepth:king.userData.bodyDimensions?.depth??king.userData.body.scale.z,kingBodyWidth:king.userData.bodyDimensions?.width??king.userData.body.scale.x,modelVersion:king.userData.modelVersion||3,shadowMode:mobile?'dominant-surfaces':'full',memory:{geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,programs:renderer.info.programs?.length||0}})};
+  return{render,project,screenToWorld,targetAt,setPlacement,setPortrait:value=>{portraitMode=!!value;},setZoom:value=>{zoom=Math.max(.45,Math.min(1.5,Number(value)||1));},diagnostics:()=>({renderer:'webgl2',frames,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fortified:fortifications.visible,actors:1+collections.allies.size+collections.enemies.size,coins:collections.coins.size,arrows:collections.arrows.size,forestTrees:FOREST_TREES.length,mounted:!!king.userData.mounted,followers:collections.followers.size,paintedTextures:painted.count,texturesReady:painted.ready,textureSource:painted.source,detailSource:painted.detailSource,realismSource:painted.realismSource,modelStyle:king.userData.modelStyle,designRevision:king.userData.designRevision,animalStyle:mount.userData.modelStyle,foliageVersion:5,worldArea:(WORLD.maxX-WORLD.minX)*(WORLD.maxY-WORLD.minY),zoom,targeting:aimRoot.visible,targetVisible:aimRoot.visible,targetWorld:aimRoot.visible?{x:aimRoot.position.x*UNIT+500,y:aimRoot.position.z*UNIT+325}:null,horseCoat,animalCoat:horseCoat,discoveries:[...discoveryModels.values()].filter(d=>d.root.visible).length,portrait:portraitMode,equippedWeapon:stateWeapon(),placedBuildings:collections.buildings.size,harvested:collections.stumps.size,kingBodyDepth:king.userData.bodyDimensions?.depth??king.userData.body.scale.z,kingBodyWidth:king.userData.bodyDimensions?.width??king.userData.body.scale.x,modelVersion:king.userData.modelVersion||3,shadowMode:mobile?'dominant-surfaces':'principal-surfaces',memory:{geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,programs:renderer.info.programs?.length||0}})};
 }
