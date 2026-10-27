@@ -21,4 +21,4 @@ export const TECHS={
 };
 export const RESOURCE_NODES=[{id:'quarry',kind:'stone',x:260,y:480},{id:'mine',kind:'iron',x:780,y:220}];
 export const RESOURCE_LABELS={wood:'bois',stone:'pierre',food:'nourriture',iron:'fer',weapons:'armes',knowledge:'savoir'};
-export const DEFAULT_APPEARANCE={name:'Aldren',cape:'#225ca8',hair:'#473229',beard:'long',skin:'#f0bf91',crown:'classic'};
+export const DEFAULT_APPEARANCE={name:'Aldren',cape:'#225ca8',hair:'#473229',beard:'long',skin:'#f0bf91',crown:'classic',outfit:'royal',emblem:'sun',hairStyle:'swept',eye:'#54737b',mountCoat:'chestnut'};

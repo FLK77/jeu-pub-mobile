@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 import {BUILDINGS} from './kingdom-data.js';
+import {createRoyalAnimals} from './animal-models.js';
 
 // Each structure is made locally from reusable sculpted pieces and then merged
 // by surface. The roofs, arches and turned masonry share cached geometry.
 export function createRoyalArchitecture(k) {
   const {scene,group,mesh,box,softBox,softBall,cylinder,geometry,mat,batch}=k;
+  const {pig}=createRoyalAnimals(k);
   const C={slate:'#4b7dbb',edge:'#294c78',cream:'#eee0bc',stone:'#b9c1b5',trim:'#e4d9b6',wood:'#806044',dark:'#263f48',gold:'#d4ad58'};
   function surface(m,color,kind,metal=0){m.material=mat(color,metal,kind);return m;}
   function block(p,c,x,y,z,w,h,d,kind='stone'){return surface(softBox(p,c,x,y,z,w,h,d),c,kind);}
@@ -78,12 +80,6 @@ export function createRoyalArchitecture(k) {
   }
   function leaf(p,x,y,z,rotation,scale=1,color='#7eaa54'){
     const s=new THREE.Shape();s.moveTo(0,0);s.bezierCurveTo(-.14,.13,-.1,.3,0,.4);s.bezierCurveTo(.1,.3,.14,.13,0,0);const leafGeo=geometry('architectureCropLeaf',()=>new THREE.ExtrudeGeometry(s,{depth:.012,bevelEnabled:false,curveSegments:4,steps:1}));const m=mesh(p,leafGeo,color,x,y,z,[scale,scale,scale]);m.rotation.y=rotation;m.rotation.z=.45;return m;
-  }
-  function pig(p,x,z){const g=group(p,x,.28,z);ellipsoid(g,'#dca392',0,.07,0,.26,.21,.38);ellipsoid(g,'#edb6a0',0,.13,.31,.2,.19,.2);ellipsoid(g,'#c7847b',0,.08,.48,.13,.085,.04);
-    for(const xx of [-.065,.065]){ellipsoid(g,'#7c4f4c',xx,.09,.515,.018,.019,.012);ellipsoid(g,'#364144',xx*1.65,.19,.465,.021,.026,.012);}
-    for(const xx of [-.16,.16])for(const zz of [-.2,.17]){ellipsoid(g,'#b7786b',xx,-.14,zz,.06,.12,.067);ellipsoid(g,'#72564c',xx,-.22,zz,.065,.035,.075);}
-    for(const sign of [-1,1]){const ear=ellipsoid(g,'#d08b7e',sign*.15,.3,.29,.1,.13,.035);ear.rotation.z=sign*-.55;}
-    tube(g,[[.04,.12,-.35],[.13,.18,-.42],[.08,.24,-.44],[.03,.2,-.4]],'#b97c71',.023);return g;
   }
   function farm(p,w,d){
     block(p,'#7e6847',0,.07,0,w,.13,d,'dirt');const barn=group(p,-w*.23,0,-d*.22);houseShell(barn,w*.43,d*.47,1.12,{doorX:-w*.1,windowX:w*.13});

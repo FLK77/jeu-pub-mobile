@@ -1,5 +1,15 @@
 # Historique
 
+## V5.0.0 — Cendrune
+
+- Nouveau nom proposé : Cendrune ; nom du royaume choisi par le joueur, styles royaux, coiffures, yeux, emblèmes et robes de cheval supplémentaires.
+- Roi au combat manuel : viser et attaquer au clic/toucher ; ciblage et effets d’attaque visibles.
+- Niveaux avec capacités : Élan au niveau 2, attaque puissante au niveau 3, exploration améliorée au niveau 4 et maîtrise au niveau 5 ; rencontres, gardiens et récompenses uniques.
+- Région 2,09 fois plus grande, nouveaux camps ; mini-carte ronde en haut à droite et dézoom jusqu’à 0,45.
+- Sept ressources en haut à gauche avec pictogrammes SVG adaptés aux matériaux.
+- Feuillages géométriques détaillés, ramures et aiguilles, palette plus vive ; costumes, visages, cheval et matériel enrichis par un atlas d’artisanat original avec reliefs.
+- Paquet PC autonome **Cendrune-PC-V5.zip** ; archives V1 à V4 conservées.
+
 ## V4.0.0 — La renaissance visuelle
 
 - Roi et habitants remodelés : membres arrondis et articulés, visage sculpté, yeux, mèches de cheveux/barbe courbes, cape drapée, couronnes ouvragées et équipements détaillés.

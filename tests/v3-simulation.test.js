@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createGame,interact,addResident,assignJob,stepGame,setWeapon,useAxe,placeBuilding,placementStatus,upgradeBuilding,demolishBuilding,research,setWage,customizeKing,kingdomStats,quotas,buy,distance} from '../simulation.js';
-import {FOREST_TREES,HOME} from '../world-data.js';
+import {createGame,interact,addResident,assignJob,stepGame,setWeapon,useAxe,setTarget,placeBuilding,placementStatus,upgradeBuilding,demolishBuilding,research,setWage,customizeKing,kingdomStats,quotas,buy,distance} from '../simulation.js';
+import {FOREST_TREES,HOME,WORLD} from '../world-data.js';
 import {BUILDINGS} from '../kingdom-data.js';
 const world=()=>{const s=createGame(66);s.phaseRemaining=1e6;return s;};
 const supplies=s=>{s.gold=10000;for(const key of Object.keys(s.resources))s.resources[key]=10000;};
@@ -25,17 +25,18 @@ test('only complete housing adds population slots, and pending arrivals reserve 
 test('axe is a genuine alternative weapon: swings have cooldown, fell trees, gather wood and earn hero xp',()=>{
   const s=world(),tree=FOREST_TREES.find(t=>t.x>0&&t.x<1500),index=FOREST_TREES.indexOf(tree);Object.assign(s.king,{x:tree.x-50,y:tree.y});
   const before=s.resources.wood;assert.equal(useAxe(s).ok,false);assert.equal(setWeapon(s,'axe').ok,true);
+  assert.equal(setTarget(s,tree.x,tree.y).ok,true);
   for(let i=0;i<3;i++){assert.equal(useAxe(s).ok,true);assert.equal(useAxe(s).ok,false);stepGame(s,.6);}
   assert.ok(s.harvested.includes(index));assert.ok(s.resources.wood>before);assert.ok(s.king.xp>=30);assert.ok(s.king.axeSwing===0);
 });
 test('axe damages nearby enemies but does not emit bow projectiles',()=>{
-  const s=world();setWeapon(s,'axe');s.enemies.push({x:550,y:420,hp:30,maxHp:30,speed:0});assert.equal(useAxe(s).ok,true);stepGame(s,.1);
+  const s=world();setWeapon(s,'axe');s.enemies.push({x:550,y:420,hp:30,maxHp:30,speed:0});setTarget(s,550,420);assert.equal(useAxe(s).ok,true);stepGame(s,.1);
   assert.equal(s.kills,1);assert.equal(s.arrows.length,0);assert.ok(s.king.xp>=20);
 });
 test('placement rejects overlaps, trees, and invalid bounds without spending; adjacent walls are legal',()=>{
   const s=world();supplies(s);const gold=s.gold;
   assert.equal(placeBuilding(s,'house',HOME.x,HOME.y).ok,false);assert.equal(s.gold,gold);
-  assert.equal(placeBuilding(s,'house',-1900,0).ok,false);const tree=FOREST_TREES[0];assert.equal(placementStatus(s,'house',tree.x,tree.y).ok,false);
+  assert.equal(placeBuilding(s,'house',WORLD.minX-100,0).ok,false);const tree=FOREST_TREES[0];assert.equal(placementStatus(s,'house',tree.x,tree.y).ok,false);
   const point=clearSite(s,'wall',sites);const result=placeBuilding(s,'wall',point.x,point.y);assert.equal(result.ok,true);assert.ok(result.id);assert.equal(placeBuilding(s,'wall',point.x+80,point.y).ok,true);
 });
 test('builders do real work and unfinished housing does not magically fill',()=>{

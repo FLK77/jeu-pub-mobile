@@ -1,12 +1,14 @@
 import * as THREE from 'three';
-import {MATERIAL_ATLAS_URL} from './art-assets.js';
+import {MATERIAL_ATLAS_URL,DETAIL_ATLAS_URL} from './art-assets.js';
 
 // Original painted maps + restrained physical surface detail. Every map remains
 // local, including in the downloadable single-file edition.
 const SIZE=512;
 const ATLAS_CELLS={grass:[0,0],dirt:[1,0],slate:[2,0],roof:[2,0],wood:[0,1],plaster:[1,1],stone:[2,1]};
+const DETAIL_CELLS={cloth:[0,0],brocade:[0,0],leather:[1,0],fur:[2,0],feather:[2,0],foliage:[0,1],leaf:[0,1],bark:[1,1],metal:[2,1]};
 export function createPaintedTextures(renderer){
-  const bases=new Map(),records=new Map();let atlas=null,ready=!MATERIAL_ATLAS_URL,failed=false;
+  const bases=new Map(),records=new Map();let atlas=null,detailAtlas=null,ready=false,failed=false,detailFailed=false;
+  let pending=Number(!!MATERIAL_ATLAS_URL)+Number(!!DETAIL_ATLAS_URL);
   let resolveReady;const readyPromise=new Promise(resolve=>{resolveReady=resolve;});
   const makeCanvas=()=>{const c=document.createElement('canvas');c.width=c.height=SIZE;return c;};
   const randomFor=kind=>{let seed=17777;for(const c of kind)seed=(Math.imul(seed,31)+c.charCodeAt(0))>>>0;return()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};};
@@ -36,9 +38,17 @@ export function createPaintedTextures(renderer){
     }else if(kind==='plaster'){
       fill('#eee8d8');for(let i=0;i<180;i++)ellipse(r()*SIZE,r()*SIZE,5+r()*35,2+r()*10,i%2?'#aa8d6210':'#fff8e616',r()*2);
       for(let i=0;i<1500;i++)ellipse(r()*SIZE,r()*SIZE,.4+r(),.3+r()*.5,i%2?'#a5937512':'#ffffff24');
+    }else if(kind==='leaf'){
+      fill('#eeeede');const middle=SIZE/2;
+      c.strokeStyle='#b1b9a1';c.lineWidth=5;c.beginPath();c.moveTo(middle,SIZE);c.quadraticCurveTo(middle-12,SIZE*.5,middle,0);c.stroke();
+      for(let i=0;i<9;i++)for(const side of [-1,1]){c.lineWidth=2;c.strokeStyle='#c4cbb7';const y=40+i*55;c.beginPath();c.moveTo(middle,y+70);c.quadraticCurveTo(middle+side*90,y+25,middle+side*245,y-35);c.stroke();}
+    }else if(kind==='bark'){
+      fill('#dcd9cd');for(let i=0;i<35;i++){const x=i*17;c.strokeStyle=i%3?'#77766b54':'#ffffff90';c.lineWidth=3+i%4;c.beginPath();c.moveTo(x,-5);c.bezierCurveTo(x+40,170,x-30,340,x+8,SIZE+5);c.stroke();}
+    }else if(kind==='fur'||kind==='feather'){
+      fill('#e3e0d8');for(let i=0;i<3400;i++){const x=r()*SIZE,y=r()*SIZE;c.strokeStyle=i%3?'#877e7138':'#fffdf2a0';c.lineWidth=.5+r();c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+5,y+4,x+2,y+12+r()*12);c.stroke();}
     }else if(kind==='foliage'){
       fill('#e1e4d1');for(let i=0;i<200;i++){const x=r()*SIZE,y=r()*SIZE,a=r()*Math.PI;ellipse(x,y,4+r()*9,2+r()*4,i%2?'#9cac8852':'#fcf5d355',a);c.strokeStyle='#7c946229';c.lineWidth=.7;c.beginPath();c.moveTo(x-Math.cos(a)*5,y-Math.sin(a)*5);c.lineTo(x+Math.cos(a)*6,y+Math.sin(a)*6);c.stroke();}
-    }else if(kind==='cloth'){
+    }else if(kind==='cloth'||kind==='brocade'){
       fill('#eee9db');for(let i=0;i<SIZE;i+=3){c.strokeStyle=i%2?'#5b5b5717':'#ffffff24';c.lineWidth=.55;c.beginPath();c.moveTo(i,0);c.lineTo(i,SIZE);c.moveTo(0,i);c.lineTo(SIZE,i);c.stroke();}
       const grad=c.createLinearGradient(0,0,SIZE,0);grad.addColorStop(0,'#a9a6a40a');grad.addColorStop(.5,'#ffffff12');grad.addColorStop(1,'#a9a6a40a');c.fillStyle=grad;c.fillRect(0,0,SIZE,SIZE);
     }else if(kind==='leather'){
@@ -51,12 +61,13 @@ export function createPaintedTextures(renderer){
     }else fill('#ece7da');
   }
   function drawColor(base,kind){
-    if(atlas&&ATLAS_CELLS[kind]){
-      const[col,row]=ATLAS_CELLS[kind],tw=atlas.naturalWidth/3,th=atlas.naturalHeight/2,c=base.color.getContext('2d');
-      c.clearRect(0,0,SIZE,SIZE);c.drawImage(atlas,col*tw,row*th,tw,th,0,0,SIZE,SIZE);
+    const sheet=DETAIL_CELLS[kind]?detailAtlas:atlas,cell=DETAIL_CELLS[kind]||ATLAS_CELLS[kind];
+    if(sheet&&cell){
+      const[col,row]=cell,tw=sheet.naturalWidth/3,th=sheet.naturalHeight/2,c=base.color.getContext('2d');
+      c.clearRect(0,0,SIZE,SIZE);c.drawImage(sheet,col*tw,row*th,tw,th,0,0,SIZE,SIZE);
       // Match opposite border pixels with a narrow feather, keeping the painted
       // centre untouched and avoiding visible tile seams on large surfaces.
-      const pixels=c.getImageData(0,0,SIZE,SIZE),data=pixels.data,edge=20;
+      const pixels=c.getImageData(0,0,SIZE,SIZE),data=pixels.data,edge=['leaf','foliage'].includes(kind)?0:20;
       const join=(a,b,weight)=>{for(let channel=0;channel<3;channel++){const average=(data[a+channel]+data[b+channel])*.5;data[a+channel]+=(average-data[a+channel])*weight;data[b+channel]+=(average-data[b+channel])*weight;}};
       for(let n=0;n<edge;n++){const weight=(1-n/edge)**2;for(let y=0;y<SIZE;y++)join((y*SIZE+n)*4,(y*SIZE+SIZE-1-n)*4,weight);}
       for(let n=0;n<edge;n++){const weight=(1-n/edge)**2;for(let x=0;x<SIZE;x++)join((n*SIZE+x)*4,((SIZE-1-n)*SIZE+x)*4,weight);}
@@ -66,9 +77,9 @@ export function createPaintedTextures(renderer){
   }
   function updateChannels(base,kind){
     const color=base.color.getContext('2d').getImageData(0,0,SIZE,SIZE),height=base.bump.getContext('2d').createImageData(SIZE,SIZE),rough=base.roughness.getContext('2d').createImageData(SIZE,SIZE);
-    const r=randomFor(kind+'-physical');const target=kind==='metal'?80:kind==='skin'?155:kind==='leather'?175:kind==='slate'?195:kind==='cloth'?232:238;
+    const r=randomFor(kind+'-physical');const target=kind==='metal'?95:kind==='skin'?175:kind==='leather'?180:kind==='slate'?195:['cloth','brocade'].includes(kind)?232:['fur','feather'].includes(kind)?215:238;
     for(let i=0;i<color.data.length;i+=4){const lum=color.data[i]*.2126+color.data[i+1]*.7152+color.data[i+2]*.0722;
-      const bump=kind==='skin'?128+(lum-245)*.1:Math.max(50,Math.min(220,128+(lum-170)*.65));const roughness=Math.max(0,Math.min(255,target+(r()-.5)*10));
+      const bump=kind==='skin'?128+(lum-245)*.1:Math.max(50,Math.min(220,128+(lum-170)*.8));const roughness=Math.max(0,Math.min(255,target+(r()-.5)*7+(kind==='metal'?(220-lum)*.22:0)));
       for(let j=0;j<3;j++){height.data[i+j]=bump;rough.data[i+j]=roughness;}height.data[i+3]=rough.data[i+3]=255;
     }
     base.bump.getContext('2d').putImageData(height,0,0);base.roughness.getContext('2d').putImageData(rough,0,0);
@@ -76,9 +87,19 @@ export function createPaintedTextures(renderer){
   }
   function baseFor(kind){if(!bases.has(kind)){const base={color:makeCanvas(),bump:makeCanvas(),roughness:makeCanvas()};bases.set(kind,base);drawColor(base,kind);}return bases.get(kind);}
   function texture(canvas,repeat,color=false){const map=new THREE.CanvasTexture(canvas);map.wrapS=map.wrapT=THREE.RepeatWrapping;map.repeat.set(repeat,repeat);if(color)map.colorSpace=THREE.SRGBColorSpace;map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());map.userData.painted=true;return map;}
-  function recordFor(kind,repeat){const key=kind+':'+repeat;if(!records.has(key)){const base=baseFor(kind);records.set(key,{kind,maps:{color:texture(base.color,repeat,true),bump:texture(base.bump,repeat),roughness:texture(base.roughness,repeat)}});}return records.get(key);}
-  if(MATERIAL_ATLAS_URL){
-    const image=new Image();image.onload=()=>{atlas=image;for(const[kind,base]of bases)drawColor(base,kind);ready=true;resolveReady();};image.onerror=()=>{failed=true;ready=true;resolveReady();};image.src=MATERIAL_ATLAS_URL;
-  }else resolveReady();
-  return{get:(kind,repeat=1)=>recordFor(kind,repeat).maps.color,getBump:(kind,repeat=1)=>recordFor(kind,repeat).maps.bump,getRoughness:(kind,repeat=1)=>recordFor(kind,repeat).maps.roughness,get count(){return records.size;},get ready(){return ready;},get source(){return atlas?'original-painted-atlas':failed?'procedural-fallback':'procedural-painted';},colored:true,readyPromise};
+  function recordFor(kind,repeat){
+    // These names address the same painted tile and physical response. Sharing
+    // the actual maps lets compatible surfaces batch together and avoids uploads.
+    kind=kind==='brocade'?'cloth':kind==='foliage'?'leaf':kind;
+    const key=kind+':'+repeat;if(!records.has(key)){const base=baseFor(kind);records.set(key,{kind,maps:{color:texture(base.color,repeat,true),bump:texture(base.bump,repeat),roughness:texture(base.roughness,repeat)}});}return records.get(key);
+  }
+  function finish(){pending--;if(pending<=0){ready=true;resolveReady();}}
+  function loadSheet(url,detail){
+    if(!url)return;const image=new Image();image.onload=()=>{
+      if(detail)detailAtlas=image;else atlas=image;
+      for(const[kind,base]of bases)if(!!DETAIL_CELLS[kind]===detail)drawColor(base,kind);finish();
+    };image.onerror=()=>{if(detail)detailFailed=true;else failed=true;finish();};image.src=url;
+  }
+  loadSheet(MATERIAL_ATLAS_URL,false);loadSheet(DETAIL_ATLAS_URL,true);if(!pending){ready=true;resolveReady();}
+  return{get:(kind,repeat=1)=>recordFor(kind,repeat).maps.color,getBump:(kind,repeat=1)=>recordFor(kind,repeat).maps.bump,getRoughness:(kind,repeat=1)=>recordFor(kind,repeat).maps.roughness,get count(){return records.size;},get ready(){return ready;},get source(){return atlas?'original-painted-atlas':failed?'procedural-fallback':'procedural-painted';},get detailSource(){return detailAtlas?'original-crafted-atlas':detailFailed?'procedural-fallback':'procedural-details';},colored:true,readyPromise};
 }

@@ -1,16 +1,17 @@
 {
-  "name": "courvane",
-  "version": "4.0.0",
+  "name": "cendrune",
+  "version": "5.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/server.test.js tests/simulation.test.js tests/v3-simulation.test.js",
+    "test": "node --test tests/server.test.js tests/simulation.test.js tests/v3-simulation.test.js tests/v5-simulation.test.js",
     "test:browser": "node --test tests/mobile.browser.cjs",
     "build:pc": "npm run build && python3 scripts/build-pc.py",
     "test:pc": "node --test tests/pc.browser.cjs",
     "build": "node scripts/build-web.mjs",
-    "test:graphics": "node --test tests/v4-graphics.test.cjs"
+    "test:graphics": "node --test tests/v5.browser.cjs",
+    "test:v5": "node --test tests/v5.browser.cjs"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

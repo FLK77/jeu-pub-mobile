@@ -1,14 +1,15 @@
-COURVANE - V4.0.0 - PC 3D
+CENDRUNE - V5.0.0 - PC 3D
 
-1. Extraire tout le ZIP Courvane-PC-V4.zip.
-2. Ouvrir le dossier Courvane-PC.
+1. Extraire tout le ZIP Cendrune-PC-V5.zip.
+2. Ouvrir le dossier Cendrune-PC.
 3. Double-cliquer sur LANCER-JEU.bat.
 
 Vous pouvez aussi ouvrir directement jeu-pc.html avec Edge, Chrome ou Firefox recent.
 WebGL 2 et acceleration graphique necessaires. Aucun serveur ni connexion requis.
 
 AU LANCEMENT
-Personnalisez le nom, le teint, la barbe, les cheveux, la cape et la couronne.
+Nommez votre roi et votre royaume. Choisissez tenue, cheveux, visage, cape, couronne et embleme.
+Choisissez aussi la robe du cheval et personnalisez votre souverain en direct.
 Les nouveaux habitants attendent votre choix de metier dans Habitants.
 Les constructeurs realisent les plans places sur le terrain.
 Seules les maisons achevees augmentent la capacite.
@@ -16,7 +17,8 @@ Seules les maisons achevees augmentent la capacite.
 COMMANDES
 ZQSD / WASD / fleches : deplacement.
 E : monter, descendre, secourir ou fouiller.
-1 : arc automatique. 2 : hache. F : couper ou frapper.
+1 : arc. 2 : hache. Clic ou toucher le terrain : viser et attaquer.
+F : frapper la cible avec la hache. Maj : esquive (niveau 2). C : attaque puissante (niveau 3).
 M / Echap / Espace : menu et pause.
 B : catalogue de construction. R : tourner le plan. Entree : placer. Echap : annuler.
 Sur mobile : joystick, boutons d armes, interaction et confirmation de placement.

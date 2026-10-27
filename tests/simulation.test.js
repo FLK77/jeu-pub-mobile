@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createGame,stepGame,interact,buy,addResident,quotas,population,distance,collide,objective} from '../simulation.js';
+import {createGame,stepGame,interact,buy,addResident,quotas,population,distance,collide,objective,attackAt} from '../simulation.js';
 import {HOME,HORSE_START,WORLD,FOREST_TREES} from '../world-data.js';
 
 // Exploration and combat regressions from V2. V3 economy/building rules have
@@ -61,8 +61,10 @@ test('the king cannot walk through tree trunks, the refuge or the map boundary',
   Object.assign(s.king,{x:500,y:300});stepGame(s,.2,{x:0,y:-1});assert.ok(s.king.y>=300);
   Object.assign(s.king,{x:WORLD.maxX-1,y:HOME.y+300});collide(s.king);assert.ok(s.king.x<=WORLD.maxX-45);
 });
-test('automatic bow arrows still kill enemies and produce collectible coins',()=>{
-  const s=createGame(9),before=s.gold;s.enemies.push({x:550,y:440,hp:10,maxHp:10,speed:0});stepGame(s,2);
+test('the king waits for a chosen target, then a manual bow shot kills and produces collectible coins',()=>{
+  const s=createGame(9),before=s.gold;s.enemies.push({x:550,y:440,hp:10,maxHp:10,speed:0});stepGame(s,1);
+  assert.equal(s.kills,0);assert.equal(s.enemies[0].hp,10);assert.equal(s.arrows.length,0);
+  assert.equal(attackAt(s,550,440).ok,true);stepGame(s,1);
   assert.equal(s.kills,1);assert.equal(s.enemies.length,0);assert.ok(s.gold>before);assert.equal(s.coins.length,0);
 });
 test('objectives respond to arrival and a fallen refuge still ends the expedition',()=>{

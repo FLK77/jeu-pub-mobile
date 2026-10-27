@@ -5,14 +5,17 @@ const fs=require('node:fs'),path=require('node:path');
 const {setTimeout:delay}=require('node:timers/promises');
 const playwright=require('playwright');
 const browserName=process.env.BROWSER||'chromium',root=path.join(__dirname,'..'),base='http://127.0.0.1:3103';
-const source=fs.readFileSync(path.join(root,'game.js'),'utf8');
+const source=fs.readFileSync(path.join(root,'game.js'),'utf8')
+  .replaceAll('if(view)requestAnimationFrame(frame)','if(view&&!window.__legacyManual)requestAnimationFrame(frame)');
 // Test-only state access is inserted before bundling; the shipped bundle has no hooks.
-const fixtureImports="import {addResident as qaAdd,assignJob as qaAssign,placementStatus as qaStatus,placeBuilding as qaPlace,stepGame as qaStep} from './simulation.js';import {FOREST_TREES as qaTrees} from './world-data.js';import {BUILDINGS as qaBuildings} from './kingdom-data.js';\n";
+const fixtureImports="import {addResident as qaAdd,assignJob as qaAssign,placementStatus as qaStatus,placeBuilding as qaPlace,stepGame as qaStep,setTarget as qaAim} from './simulation.js';import {FOREST_TREES as qaTrees,nearbyTrees as qaNear,WORLD as qaWorld} from './world-data.js';import {BUILDINGS as qaBuildings} from './kingdom-data.js';\n";
 const hook=`
 window.__gameTest={get state(){return state},get paused(){return paused},get input(){return{x:joy.x,y:joy.y,pointer:pointer.id,keys:[...keys]}},get view(){return view},get placement(){return placement},ui:()=>ui(true),draw,step:dt=>qaStep(state,dt),openMenu,closeMenu,
+manual(value){if(value)window.__legacyManual=true;else if(window.__legacyManual){window.__legacyManual=false;requestAnimationFrame(frame);}},
+aim:(x,y)=>qaAim(state,x,y),bounds:qaWorld,
 add:source=>qaAdd(state,source),assign:(id,job)=>qaAssign(state,id,job),
 prepare:()=>{state.gold=10000;for(const k of Object.keys(state.resources))state.resources[k]=10000;state.phase='peace';state.phaseRemaining=10000;},
-firstTree:()=>qaTrees.findIndex((t,i)=>t.x>0&&t.x<1500&&!state.harvested.includes(i)),tree:i=>qaTrees[i],
+firstTree:()=>qaTrees.findIndex((t,i)=>t.x>0&&t.x<1500&&!state.harvested.includes(i)&&qaNear(t.x-50,t.y).every(other=>other===t||Math.hypot(other.x-(t.x-50),other.y-t.y)>=90)),tree:i=>qaTrees[i],
 queue:type=>{for(const [x,y]of[[650,600],[850,460],[1100,350],[500,-100],[-100,200],[100,230],[1000,-100],[300,800],[750,800]]){if(qaStatus(state,type,x,y).ok)return qaPlace(state,type,x,y);}throw Error('No fixture placement for '+type);},
 finishWork:seconds=>{for(const p of state.allies)if(p.job==='builder'){const b=state.buildings.find(b=>!b.complete||b.upgrading);if(b){p.x=b.x;p.y=b.y+qaBuildings[b.type].depth/2+32;}}qaStep(state,seconds);},
 placeStatus:(type,x,y,rotation=0)=>qaStatus(state,type,x,y,rotation),
@@ -27,17 +30,20 @@ before(async()=>{
   browser=await playwright[browserName].launch(launch);
 });
 after(async()=>{if(browser)await browser.close();if(server)server.kill();});
-async function open(t,{width=390,height=844,mobile=true,start=true}={}){
+async function open(t,{width=390,height=844,mobile=true,start=true,live=false}={}){
   const context=await browser.newContext({viewport:{width,height},hasTouch:mobile,isMobile:mobile,deviceScaleFactor:mobile?3:1}),page=await context.newPage(),errors=[];
   page.setDefaultTimeout(30000);page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://**/*',r=>r.abort());await page.route('**/game.bundle.js',r=>r.fulfill({contentType:'text/javascript',body:bundle}));
   t.after(async()=>{await context.close();assert.deepEqual(errors,[],'no JavaScript exceptions');});
   await page.goto(base);await page.waitForFunction(()=>window.__gameTest&&__gameTest.view?.diagnostics().frames>0);
-  if(start)await page.locator('#start').click();
+  await page.waitForFunction(()=>__gameTest.view.diagnostics().texturesReady!==false);
+  if(!live)await page.evaluate(()=>__gameTest.manual(true));
+  if(start){await page.locator('#start').click();await page.evaluate(()=>__gameTest.draw());}
   return page;
 }
 async function hold(page){const r=await page.locator('#stick').boundingBox();await page.mouse.move(r.x+r.width/2+24,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2+25,r.y+r.height/2);await page.waitForFunction(()=>__gameTest.input.x>.5);}
 async function layout(page,ids=['menu-button','stick']){
+  await page.evaluate(()=>__gameTest.draw());
   const m=await page.evaluate(ids=>{const c=document.getElementById('game').getBoundingClientRect();return{w:innerWidth,h:innerHeight,sw:document.documentElement.scrollWidth,sh:document.documentElement.scrollHeight,canvas:{x:c.x,y:c.y,w:c.width,h:c.height},controls:ids.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return{id,x:r.x,y:r.y,w:r.width,h:r.height,right:r.right,bottom:r.bottom};})};},ids);
   assert.equal(m.canvas.x,0);assert.equal(m.canvas.y,0);assert.equal(m.canvas.w,m.w);assert.equal(m.canvas.h,m.h);assert.ok(m.sw<=m.w&&m.sh<=m.h+1);
   for(const r of m.controls)assert.ok(r.x>=0&&r.y>=0&&r.right<=m.w+1&&r.bottom<=m.h+1&&r.w>=44&&r.h>=44,JSON.stringify(r));
@@ -46,7 +52,7 @@ async function tab(page,key){await page.locator('[data-tab="'+key+'"]').click();
 
 // Keep related checks in shared contexts to avoid recompiling the large 3D scene
 // for every small assertion on software-only CI graphics.
-test('V4 customization persists; the full viewport and management tabs work on nine sizes',async t=>{
+test('V5 customization persists; the full viewport and management tabs work on nine sizes',async t=>{
   const page=await open(t,{width:1280,height:900,mobile:false,start:false});
   assert.equal(await page.evaluate(()=>__gameTest.state.time),0,'creation screen freezes the expedition');
   await page.locator('#king-name').fill('Aelys');await page.locator('#appearance-beard').selectOption('long');await page.locator('#appearance-crown').selectOption('spiked');
@@ -107,7 +113,7 @@ test('residents get chosen jobs, wages affect the dashboard, and placed housing 
 });
 
 test('touch, axe, horse, exploration camera and restart remain playable together',async t=>{
-  const page=await open(t),before=await page.evaluate(()=>__gameTest.state.king.x);await hold(page);await page.waitForFunction(x=>__gameTest.state.king.x>x+10,before);
+  const page=await open(t,{live:true}),before=await page.evaluate(()=>__gameTest.state.king.x);await hold(page);await page.waitForFunction(x=>__gameTest.state.king.x>x+10,before);
   const id=await page.evaluate(()=>__gameTest.input.pointer);await page.dispatchEvent('#stick','pointerdown',{pointerId:999,pointerType:'touch'});await page.dispatchEvent('#stick','pointerup',{pointerId:999,pointerType:'touch'});assert.equal(await page.evaluate(()=>__gameTest.input.pointer),id);
   await page.dispatchEvent('#stick','pointercancel',{pointerId:id});await page.mouse.up();assert.equal(await page.evaluate(()=>__gameTest.input.pointer),null);
   if(browserName==='chromium'){
@@ -116,23 +122,28 @@ test('touch, axe, horse, exploration camera and restart remain playable together
     await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});await page.waitForFunction(()=>__gameTest.input.pointer===null);await cdp.detach();
   }
   await hold(page);await page.setViewportSize({width:844,height:390});await page.waitForFunction(()=>__gameTest.input.pointer===null);await page.mouse.up();await layout(page);
-  await hold(page);await page.evaluate(()=>window.dispatchEvent(new Event('blur')));await page.mouse.up();assert.equal(await page.locator('#menu').isVisible(),true);await page.locator('#resume').click();
-  const stopped=await page.evaluate(()=>__gameTest.state.king.x);await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>__gameTest.state.king.x),stopped);
-  await page.evaluate(()=>{Object.assign(__gameTest.state.king,__gameTest.state.horse);__gameTest.ui();});await page.keyboard.press('e');await page.waitForFunction(()=>__gameTest.state.king.mounted&&__gameTest.view.diagnostics().mounted);
-  await page.locator('#interact').click();assert.equal(await page.evaluate(()=>__gameTest.state.king.mounted),false);
-  const tree=await page.evaluate(()=>{const i=__gameTest.firstTree(),t=__gameTest.tree(i);Object.assign(__gameTest.state.king,{x:t.x-50,y:t.y});__gameTest.ui();return i;});
+  await hold(page);await page.evaluate(()=>__gameTest.manual(true));await page.evaluate(()=>window.dispatchEvent(new Event('blur')));await page.mouse.up();assert.equal(await page.locator('#menu').isVisible(),true);await page.locator('#resume').click();
+  const stopped=await page.evaluate(()=>({x:__gameTest.state.king.x,time:__gameTest.state.time,frames:__gameTest.view.diagnostics().frames}));
+  await page.evaluate(()=>__gameTest.manual(false));await page.waitForFunction(previous=>__gameTest.view.diagnostics().frames>=previous.frames+2&&__gameTest.state.time>previous.time,stopped);
+  assert.equal(await page.evaluate(()=>__gameTest.state.king.x),stopped.x,'released input stays stopped across real simulation and render frames');
+  await page.evaluate(()=>__gameTest.manual(true));
+  await page.evaluate(()=>{Object.assign(__gameTest.state.king,__gameTest.state.horse);__gameTest.ui();});await page.keyboard.press('e');await page.evaluate(()=>__gameTest.draw());await page.waitForFunction(()=>__gameTest.state.king.mounted&&__gameTest.view.diagnostics().mounted);
+  await page.locator('#interact').click();await page.evaluate(()=>__gameTest.draw());assert.equal(await page.evaluate(()=>__gameTest.state.king.mounted),false);assert.equal(await page.evaluate(()=>__gameTest.view.diagnostics().mounted),false);
+  await page.evaluate(()=>__gameTest.manual(true));
+  const tree=await page.evaluate(()=>{const i=__gameTest.firstTree(),t=__gameTest.tree(i);Object.assign(__gameTest.state.king,{x:t.x-50,y:t.y});__gameTest.aim(t.x,t.y);__gameTest.ui();return i;});
   await page.locator('#weapon-axe').click();assert.equal(await page.evaluate(()=>__gameTest.state.king.weapon),'axe');
   const wood=await page.evaluate(()=>__gameTest.state.resources.wood),xp=await page.evaluate(()=>__gameTest.state.king.xp);
   for(let i=0;i<3;i++){await page.locator('#axe-action').click();await page.evaluate(()=>{__gameTest.step(.6);__gameTest.ui();});}
   assert.ok(await page.evaluate(i=>__gameTest.state.harvested.includes(i),tree));assert.ok(await page.evaluate(()=>__gameTest.state.resources.wood)>wood);assert.ok(await page.evaluate(()=>__gameTest.state.king.xp)>xp);
   await page.locator('#weapon-bow').click();assert.equal(await page.evaluate(()=>__gameTest.state.king.weapon),'bow');
   assert.ok(await page.evaluate(()=>__gameTest.view.diagnostics().forestTrees)>500);
-  for(const [x,y]of[[-1700,-1800],[2700,-1800],[-1700,2400],[2700,2400]]){
+  const bounds=await page.evaluate(()=>__gameTest.bounds);
+  for(const [x,y]of[[bounds.minX+100,bounds.minY+100],[bounds.maxX-100,bounds.minY+100],[bounds.minX+100,bounds.maxY-100],[bounds.maxX-100,bounds.maxY-100]]){
     const p=await page.evaluate(([x,y])=>{Object.assign(__gameTest.state.king,{x,y});__gameTest.draw();const top=__gameTest.view.project(x,y,2.8),bottom=__gameTest.view.project(x,y);return{...top,bottom:bottom.y};},[x,y]);
     assert.ok(p.x>0&&p.x<p.width&&p.y>0&&p.bottom<p.height,JSON.stringify(p));
   }
   await page.locator('#menu-button').click();const hashes=await page.evaluate(()=>{
     __gameTest.draw();const result=[];for(let f=0;f<2;f++){__gameTest.draw();const c=document.getElementById('game'),gl=c.getContext('webgl2'),p=new Uint8Array(c.width*c.height*4);gl.readPixels(0,0,c.width,c.height,gl.RGBA,gl.UNSIGNED_BYTE,p);let hash=2166136261,visible=0;for(let i=0;i<p.length;i+=16){hash=Math.imul(hash^p[i],16777619);hash=Math.imul(hash^p[i+1],16777619);if(p[i]+p[i+1]+p[i+2]>50)visible++;}if(visible<1000)throw Error('empty paused frame');result.push(hash);}return result;});assert.equal(hashes[0],hashes[1],'paused scene does not flicker');
-  await page.locator('#resume').click();await page.evaluate(()=>{const s=__gameTest.state;s.phase='raid';s.left=1;s.hp=.01;s.enemies=[{x:500,y:330,hp:999,maxHp:999,speed:0}];});await page.waitForFunction(()=>!document.getElementById('overlay').hidden);
-  await page.locator('#restart').click();assert.equal(await page.evaluate(()=>__gameTest.state.over),false);assert.equal(await page.evaluate(()=>__gameTest.state.phase),'peace');assert.equal(await page.evaluate(()=>__gameTest.state.allies.length),0);
+  await page.locator('#resume').click();await page.evaluate(()=>{const s=__gameTest.state;s.phase='raid';s.left=1;s.hp=.01;s.enemies=[{x:500,y:330,hp:999,maxHp:999,speed:0}];__gameTest.manual(false);});await page.waitForFunction(()=>!document.getElementById('overlay').hidden);
+  await page.evaluate(()=>__gameTest.manual(true));await page.locator('#restart').click();await page.evaluate(()=>__gameTest.draw());assert.equal(await page.evaluate(()=>__gameTest.state.over),false);assert.equal(await page.evaluate(()=>__gameTest.state.phase),'peace');assert.equal(await page.evaluate(()=>__gameTest.state.allies.length),0);
 });
