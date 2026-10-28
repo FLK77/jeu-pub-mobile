@@ -1,7 +1,7 @@
-CENDRUNE - V6.0.0 - PC 3D
+ORVÉCENDRE - V6.0.0 - PC 3D
 
-1. Extraire tout le ZIP Cendrune-PC-V6.zip.
-2. Ouvrir le dossier Cendrune-PC.
+1. Extraire tout le ZIP Orvecendre-PC-V6.zip.
+2. Ouvrir le dossier Orvecendre-PC.
 3. Double-cliquer sur LANCER-JEU.bat.
 
 Vous pouvez aussi ouvrir directement jeu-pc.html avec Edge, Chrome ou Firefox recent.

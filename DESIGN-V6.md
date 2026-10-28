@@ -1,4 +1,4 @@
-# Cendrune V6 — Défense et territoires
+# Orvécendre V6 — Défense et territoires
 
 La V6 développe les assauts et les réactions du peuple. Le roi détaillé et sa personnalisation de la V5.6 sont conservés. L’économie, les métiers, les capacités du roi et la construction restent la base du développement du royaume.
 
@@ -60,6 +60,8 @@ Sur le village déterministe de comparaison, la V5.6 utilise 837 appels de rendu
 
 Les tests de simulation couvrent les profils ennemis, la sélection des cibles, les bâtiments endommagés, le repli des habitants, leur riposte et les limites des territoires animaux. Les tests de modèles contrôlent les nouvelles variantes. Le parcours navigateur couvre le ciblage des modèles visibles et l’interface au toucher.
 
-`npm run build:pc` produit `Cendrune-PC-V6.zip` et actualise les alias de téléchargement. L’archive contient le jeu, le moteur, les atlas et les notices de licence ; les anciennes éditions sont conservées. Le tag de publication est `v6.0.0-cendrune` : l’ancien tag `v6.0.0`, créé avant le renommage de la V3, reste conservé. Le test PC déduit le nom du ZIP et la version attendue de `package.json` pour vérifier le paquet courant.
+`npm run build:pc` produit `Orvecendre-PC-V6.zip` et actualise les alias de téléchargement. L’archive contient le jeu, le moteur, les atlas et les notices de licence ; les anciennes éditions sont conservées. Le tag de publication est `v6.0.0-cendrune` : l’ancien tag `v6.0.0`, créé avant le renommage de la V3, reste conservé. Le test PC déduit le nom du ZIP et la version attendue de `package.json` pour vérifier le paquet courant.
 
 Les essais physiques Windows et iPhone restent nécessaires. La sauvegarde entre sessions et la reconquête de territoires ennemis restent hors de cette version.
+
+Le jeu est renommé **Orvécendre** sans changement des règles de la V6. Le téléchargement et son dossier utilisent `Orvecendre-PC`, sans accent. L’édition `Cendrune-PC-V6.zip` et son tag restent conservés dans l’historique.

@@ -7,16 +7,17 @@ const os=require('node:os');
 const {execFileSync}=require('node:child_process');
 const {chromium}=require('playwright');
 
-test('Current Cendrune ZIP contains the exact production game and works without network access',async()=>{
+test('Current Orvécendre ZIP contains the exact production game and works without network access',async()=>{
   const root=path.join(__dirname,'..');
+  const {GAME_NAME,GAME_SLUG}=await import('../brand.js');
   const {version}=JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8'));
   const [major,minor]=version.split('.'),release=minor==='0'?major:major+'.'+minor;
-  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'Cendrune PC '));
+  const temp=await fs.mkdtemp(path.join(os.tmpdir(),GAME_SLUG+' PC '));
   let browser;
   try{
-    execFileSync('python3',['-c','import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None; z.extractall(sys.argv[2])',path.join(root,`Cendrune-PC-V${release}.zip`),temp]);
-    const folder=path.join(temp,'Cendrune-PC');
-    assert.equal((await fs.readFile(path.join(folder,'VERSION.txt'),'utf8')).trim(),'Cendrune - V'+version);
+    execFileSync('python3',['-c','import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None; z.extractall(sys.argv[2])',path.join(root,`${GAME_SLUG}-PC-V${release}.zip`),temp]);
+    const folder=path.join(temp,GAME_SLUG+'-PC');
+    assert.equal((await fs.readFile(path.join(folder,'VERSION.txt'),'utf8')).trim(),GAME_NAME+' - V'+version);
     const batch=await fs.readFile(path.join(folder,'LANCER-JEU.bat'),'utf8');
     assert.ok(batch.includes('start "" "%~dp0jeu-pc.html"'));
     const launch={headless:true,args:['--no-sandbox']};

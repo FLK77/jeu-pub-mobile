@@ -1,5 +1,10 @@
 # Historique
 
+## V6.0.0 — Renommage en Orvécendre
+
+- Nouveau nom affiché : **Orvécendre**, avec le paquet **Orvecendre-PC-V6.zip**. Les règles et graphismes de la V6 sont conservés.
+- Les anciennes éditions et leurs liens restent disponibles.
+
 ## V6.0.0 — Le royaume se défend
 
 - Cinq types d’ennemis aux silhouettes et équipements distincts : pillard, javelinier, sapeur, brute et capitaine ; quatre rangs de puissance introduits au fil des vagues.

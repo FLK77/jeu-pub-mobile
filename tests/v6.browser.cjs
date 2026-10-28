@@ -75,7 +75,7 @@ async function open(t,mobile=false){
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&/THREE|WebGL|shader|GL_INVALID|3D impossible/i.test(m.text()))errors.push(m.text());});
  await page.addInitScript(()=>{window.__v6Manual=true;window.__v6Lost=false;document.addEventListener('webglcontextlost',()=>window.__v6Lost=true,true);});await page.route('https://**/*',r=>r.abort());await page.route('**/game.bundle.js',r=>r.fulfill({contentType:'text/javascript',body:bundle}));
  t.after(async()=>{const lost=await page.evaluate(()=>window.__v6Lost).catch(()=>false);await context.close();assert.equal(lost,false,'context retained');assert.deepEqual(errors,[],'no renderer, geometry or JavaScript errors');});
- await page.goto(base);if(!baseline)assert.match(await page.title(),/Cendrune.*V6/);await page.waitForFunction(()=>window.__v6QA?.view);await page.evaluate(()=>__v6QA.paint());await page.waitForFunction(()=>__v6QA.view.diagnostics().texturesReady);await page.evaluate(()=>__v6QA.paint());
+ await page.goto(base);if(!baseline)assert.match(await page.title(),/Orvécendre.*V6/);await page.waitForFunction(()=>window.__v6QA?.view);await page.evaluate(()=>__v6QA.paint());await page.waitForFunction(()=>__v6QA.view.diagnostics().texturesReady);await page.evaluate(()=>__v6QA.paint());
  const d=await page.evaluate(()=>__v6QA.view.diagnostics());assert.equal(d.modelStyle,'sculpted');assert.equal(d.designRevision,3);return page;
 }
 async function hud(page){

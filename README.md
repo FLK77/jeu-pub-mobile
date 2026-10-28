@@ -1,10 +1,10 @@
-# Cendrune · V6.0.0
+# Orvécendre · V6.0.0
 
 **Bâtissez votre héritage.** Après la chute de Valdor, personnalisez votre souverain, retrouvez son peuple, attribuez ses métiers et reconstruisez un royaume en 3D. La V6 développe la défense du royaume et la vie de la forêt : ennemis spécialisés de plusieurs puissances, habitants capables de se mettre à l’abri ou de se défendre, et faune qui protège son territoire. Le rendu limite le travail effectué sur les éléments éloignés pour réduire la charge graphique.
 
 Le souverain détaillé de la V5.6 conserve son visage mature, sa barbe grisonnante, son armure sombre et sa couronne ouvragée.
 
-![Souverain de Cendrune](docs/v5.6-king.png)
+![Souverain d’Orvécendre](docs/v5.6-king.png)
 
 Les vues rapprochées du [buste](docs/v5.6-bust.png), du [visage](docs/v5.6-face.png), de la [couronne](docs/v5.6-crown.png), des [mains](docs/v5.6-hands.png) et du [portrait](docs/v5.6-portrait.png) documentent ce modèle. Son visage et ses mains dérivent uniquement de données de maillage MakeHuman publiées sous CC0, adaptées pour le jeu. Leur provenance, leur empreinte et la licence complète figurent dans [assets/licenses/makehuman-cc0.txt](assets/licenses/makehuman-cc0.txt).
 
@@ -12,8 +12,8 @@ Aperçus des modèles de production V6 : [les cinq ennemis](docs/v6-enemies.png)
 
 ## Jouer sur PC
 
-1. Télécharger **[Cendrune-PC-V6.zip](Cendrune-PC-V6.zip)** et choisir **Extraire tout**.
-2. Ouvrir le dossier **Cendrune-PC**.
+1. Télécharger **[Orvecendre-PC-V6.zip](Orvecendre-PC-V6.zip)** et choisir **Extraire tout**.
+2. Ouvrir le dossier **Orvecendre-PC**.
 3. Double-cliquer sur **LANCER-JEU.bat**, ou ouvrir `jeu-pc.html` avec Edge, Chrome ou Firefox récent.
 
 WebGL 2 et accélération graphique nécessaires. Le jeu et le moteur sont intégrés dans le fichier : aucun serveur ni connexion n’est nécessaire après le téléchargement. Le jeu occupe toute la fenêtre ; le plein écran du navigateur se choisit dans Options.
@@ -48,7 +48,7 @@ Les habitants, le roi et le royaume ont chacun une progression en XP et en nivea
 
 Le roi ne tire plus automatiquement : choisissez votre cible au clic ou au toucher. Les niveaux débloquent une esquive, une attaque puissante puis de nouvelles possibilités d’exploration. Certains lieux réservent des rencontres et des récompenses uniques. La vie du roi peut baisser lors de ces rencontres ; un repli au refuge évite de perdre la partie.
 
-Les règles économiques restent détaillées dans [DESIGN-V3.md](DESIGN-V3.md), le combat et l’exploration dans [DESIGN-V5.md](DESIGN-V5.md), les personnages et animaux dans [DESIGN-V5.5.md](DESIGN-V5.5.md), le souverain dans [DESIGN-V5.6.md](DESIGN-V5.6.md) et les assauts, la protection des habitants et la faune dans [DESIGN-V6.md](DESIGN-V6.md). Le nom **Cendrune** a donné zéro dépôt dans la recherche GitHub accessible ; les catalogues de jeux ont été bloqués par le réseau. L’exclusivité du nom n’est pas affirmée : voir [NAME-RESEARCH-V5.md](NAME-RESEARCH-V5.md).
+Les règles économiques restent détaillées dans [DESIGN-V3.md](DESIGN-V3.md), le combat et l’exploration dans [DESIGN-V5.md](DESIGN-V5.md), les personnages et animaux dans [DESIGN-V5.5.md](DESIGN-V5.5.md), le souverain dans [DESIGN-V5.6.md](DESIGN-V5.6.md) et les assauts, la protection des habitants et la faune dans [DESIGN-V6.md](DESIGN-V6.md). Le nom inventé **Orvécendre** évoque un royaume qui renaît de ses cendres. Son exclusivité dans tous les catalogues de jeux n’est pas affirmée : voir [NAME-RESEARCH-V6.md](NAME-RESEARCH-V6.md).
 
 ## Défendre un royaume vivant
 
@@ -96,7 +96,7 @@ Le script vérifie l’empreinte de la source. Sa sortie par défaut est `assets
 - `game.js`, `index.html`, `style.css` : interface, personnalisation, commandes et placement.
 - `brand.js` : nom et version du jeu.
 
-`npm run build` assemble ces modules, les données anatomiques et Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le document autonome et `Cendrune-PC-V6.zip`. `Cendrune-PC.zip`, `Courvane-PC.zip` et `Royaume-PC.zip` sont des alias de la version courante. Le nom de l’archive conserve la version mineure ; les archives V1/V2/V3/V4/V5/V5.5/V5.6 et leurs tags sont conservés. Les trois atlas et le maillage du roi sont intégrés au script : aucun téléchargement de ces ressources au lancement.
+`npm run build` assemble ces modules, les données anatomiques et Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le document autonome et `Orvecendre-PC-V6.zip`. `Orvecendre-PC.zip` est le téléchargement courant ; `Cendrune-PC.zip`, `Courvane-PC.zip` et `Royaume-PC.zip` restent des alias compatibles. Le nom de l’archive conserve la version mineure ; les archives V1/V2/V3/V4/V5/V5.5/V5.6 ainsi que la première édition Cendrune V6 et leurs tags sont conservés. Les trois atlas et le maillage du roi sont intégrés au script : aucun téléchargement de ces ressources au lancement.
 
 Les armures, vêtements, cheveux, barbes, couronnes et décors sont des créations du projet inspirées des images transmises. Le visage et les mains du roi sont adaptés du maillage de base MakeHuman hm08 publié sous CC0 ; aucun code du logiciel MakeHuman n’est utilisé. Les données converties sont intégrées au paquet. Les parties statiques sont regroupées avec couleurs de sommets, les arbres instanciés par secteurs et niveaux de détail. `THIRD-PARTY-NOTICES.txt` réunit la licence MIT de Three.js, la provenance anatomique et le texte complet de CC0 ; ce document est aussi inclus dans l’archive PC.
 
