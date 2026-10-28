@@ -21,3 +21,15 @@ Cet atlas est également intégré au script autonome PC. Les trois chargements 
 Le lin uni des capes et tuniques (`linen`) utilise une trame procédurale originale de fils fins entrecroisés. Sa couleur neutre et ses variations discrètes conservent les couleurs de la tenue, avec un relief peu marqué et une forte rugosité. Il ne réutilise pas les grandes broderies de l’ancien tissu et ne nécessite aucun chargement supplémentaire.
 
 La matière `hoof` des sabots emploie des stries de kératine procédurales fines, avec un relief faible et une rugosité dédiée. Elle fonctionne localement sans image supplémentaire.
+
+## Anatomie du souverain V5.6
+
+`v56-king-anatomy.json` contient les données de visage et de mains du roi adaptées du maillage de base **MakeHuman hm08**. Le fichier source `makehuman/data/3dobjs/base.obj` annonce explicitement sa publication sous CC0 en septembre 2020. La section C du document de licence amont confirme que le maillage de base fait partie des ressources graphiques publiées sous CC0 1.0 Universal.
+
+Source : <https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/3dobjs/base.obj>. Empreinte SHA256 du fichier utilisé : `8e761e6624b8f54536409135d1636da63b32486a90d4897f84e121d144f6fb4c` (1 749 303 octets). Les titulaires nommés dans son en-tête sont **Data Collection AB, Joel Palmius et Jonas Hauquier, 2020**.
+
+La copie source et les deux documents de licence ont été vérifiés octet par octet à la révision amont [`a8bc2d54ff0ac92e78ff71431b1023eda42bf482`](https://github.com/makehumancommunity/makehuman/tree/a8bc2d54ff0ac92e78ff71431b1023eda42bf482). Le [fichier OBJ épinglé](https://raw.githubusercontent.com/makehumancommunity/makehuman/a8bc2d54ff0ac92e78ff71431b1023eda42bf482/makehuman/data/3dobjs/base.obj) permet de retrouver la source exacte.
+
+Le script propre au projet `scripts/build-king-anatomy.py` extrait et adapte uniquement des données de maillage. Aucun code de l’application MakeHuman n’est importé. Les armures, vêtements, cheveux, barbe et ornements du roi sont des créations séparées du projet. Les trois atlas de matières précédents conservent leur provenance.
+
+[licenses/makehuman-cc0.txt](licenses/makehuman-cc0.txt) conserve les sources, l’empreinte, l’en-tête d’origine et le texte complet de CC0. Le build ajoute cette notice à `THIRD-PARTY-NOTICES.txt` avec la licence MIT de Three.js ; l’édition PC inclut ce document. Les données anatomiques sont intégrées au script du jeu pour fonctionner hors ligne.

@@ -127,7 +127,7 @@ $('menu-button').onclick=()=>openMenu();$('minimap-button').onclick=()=>openMenu
 for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>selectTab(b.dataset.tab);
 for(const id of ['king-name','kingdom-name','appearance-cape','appearance-hair','appearance-beard','appearance-skin','appearance-crown','appearance-outfit','appearance-emblem','appearance-hair-style','appearance-eye','appearance-mount-coat'])$(id).addEventListener('input',previewKing);
 const appearancePresets={
-  royal:{cape:'#286bc3',hair:'#3b302d',beard:'long',skin:'#efc49b',crown:'classic',outfit:'royal',emblem:'sun',hairStyle:'swept',eye:'#54737b',mountCoat:'chestnut'},
+  royal:{cape:'#24282d',hair:'#858b8d',beard:'long',skin:'#efc49b',crown:'classic',outfit:'royal',emblem:'sun',hairStyle:'swept',eye:'#54737b',mountCoat:'chestnut'},
   ranger:{cape:'#26775b',hair:'#805338',beard:'short',skin:'#c58b61',crown:'classic',outfit:'ranger',emblem:'stag',hairStyle:'short',eye:'#6c874c',mountCoat:'ivory'},
   warden:{cape:'#9c2947',hair:'#d6d1c3',beard:'none',skin:'#875535',crown:'spiked',outfit:'warden',emblem:'moon',hairStyle:'braids',eye:'#7470a2',mountCoat:'night'}
 };

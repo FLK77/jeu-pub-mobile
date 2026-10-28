@@ -1,5 +1,13 @@
 # Historique
 
+## V5.6.0 — Le souverain
+
+- Roi mature aux cheveux et à la barbe grisonnants, armure sombre, cape noire par défaut et couronne dorée portée sans casque.
+- Visage et mains reconstruits à partir d’extraits anatomiques du maillage MakeHuman hm08 publié sous CC0, adaptés pour le roi ; armure, cheveux, barbe et insignes créés pour le projet.
+- Provenance du fichier source et empreinte SHA256 conservées, licence CC0 complète et licence MIT de Three.js réunies dans les notices distribuées avec le jeu.
+- Données anatomiques locales intégrées au script et à l’édition PC autonome **Cendrune-PC-V5.6.zip**.
+- Personnages secondaires, animaux et règles de jeu de la V5.5 conservés ; archives V5.5 et antérieures préservées.
+
 ## V5.5.0 — Refonte des personnages et animaux
 
 - Proportions adultes, visages sculptés, paupières, nez et mâchoires redessinés pour le roi, les habitants et les ennemis.

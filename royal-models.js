@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 import {createRoyalArchitecture} from './royal-architecture.js';
+import {createRoyalKingFactory} from './royal-king.js';
 
 // Original sculpted fantasy figures. Shapes are cached and surfaces are batched.
 export function createRoyalModels(k) {
   const {scene,group,mesh,box,softBox,geometry,mat,batch}=k;
-  const defaults={cape:'#315ba4',hair:'#42464e',beard:'long',skin:'#e1b18b',crown:'classic',outfit:'royal',emblem:'sun',hairStyle:'swept',eye:'#54737b',mountCoat:'chestnut'};
+  const defaults={cape:'#24282d',hair:'#858b8d',beard:'long',skin:'#e1b18b',crown:'classic',outfit:'royal',emblem:'sun',hairStyle:'swept',eye:'#54737b',mountCoat:'chestnut'};
+  const sculptedKing=createRoyalKingFactory(k,defaults);
   const tint=(color,amount)=>new THREE.Color(color).offsetHSL(0,0,amount).getStyle();
   const gold='#bda66b',goldLight='#d8c58d',steel='#a9b3b6',leather='#4c382c';
   const sphere=geometry('realistic-detail-sphere',()=>new THREE.SphereGeometry(1,16,12));
@@ -254,6 +256,7 @@ export function createRoyalModels(k) {
     for(const s of [-1,1])for(let i=0;i<10;i++)stroke(parent,[[s*(.08+i*.013),1.905-i*.004,.089],[s*(.095+i*.015),1.84-i*.007,.153],[s*(.12+i*.017),1.79-i*.007,.163]],i%3?base:light,.009,'fur',5);
   }
   function character(type='unassigned',appearance={}){
+    if(type==='king')return sculptedKing(appearance);
     const a={...defaults,...appearance},royal=type==='king',enemy=type==='enemy',elite=enemy&&!!a.elite,knight=type==='knight'||type==='ally',job=type==='survivor'?'unassigned':type;
     detailed=royal;
     const palette={worker:'#5e6d55',builder:'#a28c57',farmer:'#888455',armorer:'#526371',inventor:'#766380',knight:'#4d6d7d',ally:'#4d6d7d',unassigned:'#8c8067'},outfit=royal?a.outfit:'citizen',ranger=outfit==='ranger',warden=outfit==='warden',color=royal?(ranger?'#4b6148':warden?'#506772':'#3a5572'):enemy?(elite?'#5c5969':'#794c43'):palette[job]||'#867967',skin=royal?a.skin:'#cfa98c',hair=royal?a.hair:enemy?'#463b32':job==='inventor'?'#989185':'#51463b',s=royal?1:elite?.97:.86;

@@ -1,6 +1,6 @@
-CENDRUNE - V5.5.0 - PC 3D
+CENDRUNE - V5.6.0 - PC 3D
 
-1. Extraire tout le ZIP Cendrune-PC-V5.5.zip.
+1. Extraire tout le ZIP Cendrune-PC-V5.6.zip.
 2. Ouvrir le dossier Cendrune-PC.
 3. Double-cliquer sur LANCER-JEU.bat.
 

@@ -1,16 +1,16 @@
-# Cendrune · V5.5.0
+# Cendrune · V5.6.0
 
-**Bâtissez votre héritage.** Après la chute de Valdor, personnalisez votre souverain, retrouvez son peuple, attribuez ses métiers et reconstruisez un royaume en 3D. La V5.5 refond les modèles du roi, des habitants, des ennemis et des animaux à partir des nouvelles références transmises : proportions adultes, anatomie modelée, vêtements en couches et matériaux plus réalistes. La visée manuelle, les capacités, les rencontres et la grande région forestière de la V5 sont conservées.
+**Bâtissez votre héritage.** Après la chute de Valdor, personnalisez votre souverain, retrouvez son peuple, attribuez ses métiers et reconstruisez un royaume en 3D. La V5.6 se concentre sur le roi : visage mature, cheveux et barbe grisonnants, armure sombre et couronne dorée posée sur les cheveux. Son visage et ses mains utilisent une base anatomique retravaillée ; les vêtements, les cheveux, la barbe et les insignes royaux sont créés pour le jeu. Les habitants, les animaux et les règles de jeu restent ceux de la V5.5.
 
-![Souverain de Cendrune V5.5](docs/v5.5-king.png)
+![Souverain de Cendrune V5.6](docs/v5.6-king.png)
 
-Vues rapprochées des modèles de production, réalisées avec le moteur du jeu : [cheval et sellerie](docs/v5.5-horse.png) · [habitants et métiers](docs/v5.5-professions.png). Ce cadrage de contrôle sert à examiner leurs détails.
+Vues du modèle de production réalisées avec le moteur du jeu : [buste](docs/v5.6-bust.png) · [visage](docs/v5.6-face.png) · [couronne](docs/v5.6-crown.png) · [mains](docs/v5.6-hands.png) · [portrait de création](docs/v5.6-portrait.png). Les cadrages rapprochés servent au contrôle des détails.
 
-Le roi porte un casque couronné, un mantelet de fourrure, une cotte de mailles et un tabard fendu. Les habitants et les ennemis reçoivent la même construction anatomique, avec des vêtements et des outils propres à leur rôle. Le cheval et les cochons sont remodelés ; les robes, la sellerie et les harnachements utilisent des matériaux distincts. Le lin uni des capes et tuniques possède une trame fine ; le cuir, la peau, le métal et le pelage court ont chacun leur relief et leur rugosité.
+Le roi porte une armure sombre, une cape noire par défaut et une couronne ouvragée sans casque. Le visage et les mains dérivent uniquement de données de maillage MakeHuman publiées sous CC0, adaptées aux proportions et au caractère du souverain. Leur provenance, leur empreinte et la licence complète figurent dans [assets/licenses/makehuman-cc0.txt](assets/licenses/makehuman-cc0.txt). Les aperçus des [animaux](docs/v5.5-horse.png) et des [métiers](docs/v5.5-professions.png) de la V5.5 restent disponibles.
 
 ## Jouer sur PC
 
-1. Télécharger **[Cendrune-PC-V5.5.zip](Cendrune-PC-V5.5.zip)** et choisir **Extraire tout**.
+1. Télécharger **[Cendrune-PC-V5.6.zip](Cendrune-PC-V5.6.zip)** et choisir **Extraire tout**.
 2. Ouvrir le dossier **Cendrune-PC**.
 3. Double-cliquer sur **LANCER-JEU.bat**, ou ouvrir `jeu-pc.html` avec Edge, Chrome ou Firefox récent.
 
@@ -46,7 +46,7 @@ Les habitants, le roi et le royaume ont chacun une progression en XP et en nivea
 
 Le roi ne tire plus automatiquement : choisissez votre cible au clic ou au toucher. Les niveaux débloquent une esquive, une attaque puissante puis de nouvelles possibilités d’exploration. Certains lieux réservent des rencontres et des récompenses uniques. La vie du roi peut baisser lors de ces rencontres ; un repli au refuge évite de perdre la partie.
 
-Les règles économiques restent détaillées dans [DESIGN-V3.md](DESIGN-V3.md), le combat et l’exploration dans [DESIGN-V5.md](DESIGN-V5.md), la nouvelle refonte des acteurs dans [DESIGN-V5.5.md](DESIGN-V5.5.md). Le nom **Cendrune** a donné zéro dépôt dans la recherche GitHub accessible ; les catalogues de jeux ont été bloqués par le réseau. L’exclusivité du nom n’est pas affirmée : voir [NAME-RESEARCH-V5.md](NAME-RESEARCH-V5.md).
+Les règles économiques restent détaillées dans [DESIGN-V3.md](DESIGN-V3.md), le combat et l’exploration dans [DESIGN-V5.md](DESIGN-V5.md), les personnages et animaux dans [DESIGN-V5.5.md](DESIGN-V5.5.md), le nouveau souverain dans [DESIGN-V5.6.md](DESIGN-V5.6.md). Le nom **Cendrune** a donné zéro dépôt dans la recherche GitHub accessible ; les catalogues de jeux ont été bloqués par le réseau. L’exclusivité du nom n’est pas affirmée : voir [NAME-RESEARCH-V5.md](NAME-RESEARCH-V5.md).
 
 ## Développement
 
@@ -60,6 +60,14 @@ npm start
 
 Port 3000 par défaut ; `PORT=3200 npm start` permet un autre port. Chaque tâche cloud est isolée : utiliser le dépôt existant, sans créer de worktree sauf demande explicite.
 
+Les données anatomiques converties sont déjà incluses dans le dépôt : le build courant ne nécessite pas Blender. Leur régénération utilise Blender et le fichier `base.obj` dont l’empreinte est documentée dans [assets/README.md](assets/README.md) :
+
+```sh
+blender -b -t 2 --python scripts/build-king-anatomy.py -- --source /chemin/vers/base.obj
+```
+
+Le script vérifie l’empreinte de la source. Sa sortie par défaut est `assets/v56-king-anatomy.json` ; `--output` permet de choisir un autre emplacement.
+
 - `simulation.js` : règles et progression indépendantes du navigateur.
 - `kingdom-data.js` : métiers, ouvrages, recherches et coûts.
 - `world-data.js` : région, camps, lieux, forêt et index spatial.
@@ -68,14 +76,15 @@ Port 3000 par défaut ; `PORT=3200 npm start` permet un autre port. Chaque tâch
 - `progression-data.js` : capacités par niveau et reliques.
 - `icons.js` : pictogrammes SVG des matériaux, métiers et bâtiments.
 - `royal-models.js` : personnages sculptés, visages, coiffures, vêtements et équipements.
+- `assets/v56-king-anatomy.json`, `scripts/build-king-anatomy.py` : données anatomiques adaptées pour le roi et conversion reproductible du maillage source CC0.
 - `royal-architecture.js` : bâtiments, ouvertures cintrées et toitures courbes.
 - `painted-textures.js`, `art-assets.js`, `assets/` : atlas peint original et cartes de relief/rugosité locales.
 - `game.js`, `index.html`, `style.css` : interface, personnalisation, commandes et placement.
 - `brand.js` : nom et version du jeu.
 
-`npm run build` assemble ces modules et Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le document autonome et `Cendrune-PC-V5.5.zip`. `Cendrune-PC.zip`, `Courvane-PC.zip` et `Royaume-PC.zip` sont des alias de la version courante. Le nom de l’archive conserve la version mineure ; les archives V1/V2/V3/V4/V5 et leurs tags sont conservés. Les trois atlas sont inclus dans le script assemblé : aucun téléchargement d’image au lancement.
+`npm run build` assemble ces modules, les données anatomiques et Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le document autonome et `Cendrune-PC-V5.6.zip`. `Cendrune-PC.zip`, `Courvane-PC.zip` et `Royaume-PC.zip` sont des alias de la version courante. Le nom de l’archive conserve la version mineure ; les archives V1/V2/V3/V4/V5/V5.5 et leurs tags sont conservés. Les trois atlas et le maillage du roi sont intégrés au script : aucun téléchargement de ces ressources au lancement.
 
-Les modèles sont des créations procédurales originales inspirées des images transmises, sans reprise de leurs fichiers ni de leurs filigranes. Les parties statiques sont regroupées avec couleurs de sommets, les arbres instanciés par secteurs et niveaux de détail. La licence de Three.js est incluse dans l’archive.
+Les armures, vêtements, cheveux, barbes, couronnes et décors sont des créations du projet inspirées des images transmises. Le visage et les mains du roi sont adaptés du maillage de base MakeHuman hm08 publié sous CC0 ; aucun code du logiciel MakeHuman n’est utilisé. Les données converties sont intégrées au paquet. Les parties statiques sont regroupées avec couleurs de sommets, les arbres instanciés par secteurs et niveaux de détail. `THIRD-PARTY-NOTICES.txt` réunit la licence MIT de Three.js, la provenance anatomique et le texte complet de CC0 ; ce document est aussi inclus dans l’archive PC.
 
 ## Vérifications
 
@@ -93,6 +102,8 @@ Les tests V5 couvrent la visée manuelle, les capacités, leurs niveaux requis, 
 Le test graphique construit un village représentatif avec les six métiers et dix ouvrages, compare les silhouettes et les personnalisations, vérifie le chargement de l’atlas, la stabilité des images en pause, les ressources GPU après reconstructions et le cadrage mobile. Les captures et compteurs sont écrits dans `/tmp/cendrune-v5-qa`. Une référence antérieure peut être fournie avec `GRAPHICS_BASELINE_ROOT`. Ces compteurs ne mesurent pas la fluidité d’un téléphone réel.
 
 Les contrôles de la V5.5 ajoutent les proportions anatomiques, les sommets et indices des nouveaux modèles, les articulations du cavalier et la réutilisation des formes. Les vues rapprochées du roi, du cheval, des cochons et des métiers utilisent les modèles et matériaux de production ; leurs accès de studio sont injectés uniquement par les tests. Les captures et mesures correspondantes sont écrites dans `/tmp/cendrune-realistic-qa`.
+
+Les contrôles de la V5.6 portent sur le souverain, ses données anatomiques, les choix de personnalisation et les vues du visage, du buste, de la couronne et des mains. Les accès de contrôle restent propres aux tests. Le paquet PC conserve sa vérification du script exact et de son fonctionnement hors réseau.
 
 Le test PC extrait le ZIP dans un chemin contenant des espaces, vérifie sa version et le script exact, puis exerce l’édition en mode hors réseau. La politique du navigateur cloud bloque `file://` et `data:` : le document extrait est testé via `page.setContent`. Le batch et le double-clic Windows doivent encore être confirmés sur un appareil réel. Les essais matériels iPhone restent également nécessaires. Les entrées sont dimensionnées pour le toucher ; sur mobile, leurs caractères restent à 16 px pour éviter le zoom automatique de Safari.
 

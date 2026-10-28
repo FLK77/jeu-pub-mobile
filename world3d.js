@@ -68,8 +68,8 @@ export function createWorld(canvas) {
     if (!materials.has(key)) {
       const tint=new THREE.Color(color);
       if(painted.colored&&['wood','stone','slate','plaster','roof'].includes(surface))tint.lerp(new THREE.Color('#ffffff'),.78);
-      const actorSurface=['skin','mail','quilt','horsehide','hide','steel','linen','hoof'].includes(surface);
-      const bumpScale={wood:.025,bark:.055,stone:.035,slate:.04,plaster:.012,foliage:.026,leaf:.026,cloth:.014,brocade:.014,skin:.0015,leather:.012,fur:.016,feather:.015,metal:.006,mail:.012,quilt:.01,linen:.003,hoof:.0015,horsehide:.0025,hide:.007,steel:.003}[surface]??.015;
+      const actorSurface=['skin','mail','quilt','horsehide','hide','steel','linen','hoof','kingHair','kingFur'].includes(surface);
+      const bumpScale={wood:.025,bark:.055,stone:.035,slate:.04,plaster:.012,foliage:.026,leaf:.026,cloth:.014,brocade:.014,skin:.0015,leather:.012,fur:.016,feather:.015,metal:.006,mail:.012,quilt:.01,linen:.003,hoof:.0015,kingHair:.0025,kingFur:.004,horsehide:.0025,hide:.007,steel:.003}[surface]??.015;
       // Actor maps encode their own physical roughness. Multiplying them by
       // another low constant would turn skin, leather and short coats glossy.
       const roughness=actorSurface?1:metalness?.32:surface==='leather'?.86:.95;
@@ -374,7 +374,7 @@ export function createWorld(canvas) {
     const d=actor.userData,parts=(node)=>{const meshes=[];node?.traverse(m=>{if(m.isMesh)meshes.push(m);});return meshes;};
     const articulated=new Set([...d.legs,...d.arms,...(d.skirtPanels||[]),d.cape,d.jobTool,d.weapons,d.health].filter(Boolean)),body=[];
     actor.traverse(m=>{if(!m.isMesh)return;for(let node=m;node&&node!==actor;node=node.parent)if(articulated.has(node))return;body.push(m);});
-    dominantShadows(body,mobile?4:6,true);
+    dominantShadows(body,mobile?4:6,!(mobile&&d.designRevision===3));
     for(const limb of [...d.legs,...d.arms])dominantShadows(parts(limb),mobile?2:3);
     for(const panel of d.skirtPanels||[])dominantShadows(parts(panel),1);
     if(d.cape)dominantShadows(parts(d.cape),2);
@@ -502,7 +502,7 @@ export function createWorld(canvas) {
       if(!m){m=make(item);m.userData.signature=value;map.set(item,m);}animate(m,item);
     }
   }
-  function pose(g,p,time,mounted=false,facing=null){
+  function pose(g,p,time,mounted=false,facing=null,portrait=false){
     const x=wx(p.x),z=wz(p.y),d=g.userData;
     const moving=d.lastX!==undefined&&Math.hypot(x-d.lastX,z-d.lastZ)>.002;
     if(moving&&p.aim===undefined)g.rotation.y=Math.atan2(x-d.lastX,z-d.lastZ);
@@ -527,12 +527,16 @@ export function createWorld(canvas) {
       panel.rotation.x=mounted?(panel.userData.front?-.45:.25):moving?Math.sin(time*10+panel.userData.side)*.065:0;
       panel.rotation.z=mounted?panel.userData.side*.28:0;
     }
+    d.poseRoyal?.(p,time,mounted,portrait);
   }
-  const portraitScene=new THREE.Scene();portraitScene.environment=skyEnvironment.texture;portraitScene.environmentIntensity=.65;
+  const portraitScene=new THREE.Scene();portraitScene.environment=skyEnvironment.texture;portraitScene.environmentIntensity=.4;
   const portraitBackdrop=document.createElement('canvas');portraitBackdrop.width=portraitBackdrop.height=256;const portraitContext=portraitBackdrop.getContext('2d'),portraitGradient=portraitContext.createRadialGradient(88,104,12,100,118,205);portraitGradient.addColorStop(0,'#617886');portraitGradient.addColorStop(.5,'#304b60');portraitGradient.addColorStop(1,'#15283c');portraitContext.fillStyle=portraitGradient;portraitContext.fillRect(0,0,256,256);portraitScene.background=new THREE.CanvasTexture(portraitBackdrop);portraitScene.background.colorSpace=THREE.SRGBColorSpace;
-  portraitScene.add(new THREE.HemisphereLight('#e4ecfa','#a58c74',1.8));
-  const portraitLight=new THREE.DirectionalLight('#fff1dd',3.4);portraitLight.position.set(-4,7,5);portraitScene.add(portraitLight);
-  const rim=new THREE.DirectionalLight('#a9cffa',2.1);rim.position.set(4,3,-3);portraitScene.add(rim);
+  portraitScene.add(new THREE.HemisphereLight('#e4ecfa','#a58c74',.85));
+  const portraitLight=new THREE.DirectionalLight('#fff1dd',3.1);portraitLight.position.set(-4,7,5);portraitLight.castShadow=true;
+  portraitLight.shadow.mapSize.set(1024,1024);portraitLight.shadow.bias=-.00002;portraitLight.shadow.normalBias=.0015;
+  Object.assign(portraitLight.shadow.camera,{left:-1.8,right:1.8,top:2,bottom:-2,near:.5,far:14});
+  portraitLight.target.position.set(0,1.35,0);portraitScene.add(portraitLight.target,portraitLight);
+  const rim=new THREE.DirectionalLight('#a9cffa',1.6);rim.position.set(4,3,-3);portraitScene.add(rim);
   const pedestal=cylinder(portraitScene,'#304c64',0,-.13,0,.85,.22);cylinder(portraitScene,'#d2b36a',0,-.025,0,.87,.035,.4);
   const halo=mesh(portraitScene,geometry('portraitHalo',()=>new THREE.TorusGeometry(1.65,.025,5,64)),'#8c8055',0,1.3,-.55);halo.rotation.z=.2;
   const portraitCamera=new THREE.OrthographicCamera(-3,3,2.3,-2.3,.1,40);
@@ -576,10 +580,10 @@ export function createWorld(canvas) {
     if(signature!==kingSignature){disposeTree(king);king=character('king',state.king.appearance);kingSignature=signature;}
     if(portraitMode){
       if(signature!==portraitSignature){if(portraitKing)disposeTree(portraitKing);portraitKing=character('king',state.king.appearance);portraitScene.add(portraitKing);
-        const portraitMaterials=new Map();portraitKing.traverse(m=>{if(!m.isMesh||!m.material.metalness)return;const original=m.material;if(!portraitMaterials.has(original)){const material=original.clone();material.metalness=Math.min(.55,material.metalness);material.roughness=.32;material.envMapIntensity=1;portraitMaterials.set(original,material);}m.material=portraitMaterials.get(original);m.userData.ownedMaterial=true;});portraitSignature=signature;}
+        const portraitMaterials=new Map();portraitKing.traverse(m=>{if(!m.isMesh||!m.material.metalness)return;const original=m.material;if(!portraitMaterials.has(original)){const material=original.clone();material.metalness=Math.min(.65,material.metalness);material.roughness=original.roughnessMap?1:.38;material.envMapIntensity=.8;portraitMaterials.set(original,material);}m.material=portraitMaterials.get(original);m.userData.ownedMaterial=true;});portraitSignature=signature;}
       const tall=rect.width<600&&rect.height>rect.width,h=tall?5.7:4.55,w=h*aspect;
       portraitCamera.left=-w*(tall?.5:.68);portraitCamera.right=w*(tall?.5:.32);portraitCamera.top=h*(tall?.3:.5);portraitCamera.bottom=-h*(tall?.7:.5);portraitCamera.updateProjectionMatrix();
-      portraitCamera.position.set(3.4,2.45,6.5);portraitCamera.lookAt(0,1.1,0);portraitCamera.updateMatrixWorld();pose(portraitKing,{x:500,y:325,aim:.15,weapon:state.king.weapon||'bow'},0,false);renderer.toneMappingExposure=1.12;renderer.render(portraitScene,portraitCamera);renderer.toneMappingExposure=1.15;frames++;canvas.dataset.renderer='webgl2';return;
+      portraitCamera.position.set(3.4,2.45,6.5);portraitCamera.lookAt(0,1.1,0);portraitCamera.updateMatrixWorld();pose(portraitKing,{x:500,y:325,aim:.15,weapon:state.king.weapon||'bow'},0,false,null,true);renderer.toneMappingExposure=1.12;renderer.render(portraitScene,portraitCamera);renderer.toneMappingExposure=1.15;frames++;canvas.dataset.renderer='webgl2';return;
     }
     updateHarvest(state);
     // Follow the king, while leaving enough room above him to see incoming danger.

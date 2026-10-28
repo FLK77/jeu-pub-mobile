@@ -1,0 +1,80 @@
+{
+  "source": "148b1cfc5b3b03a26f185d4df2ec540df28e3a24",
+  "actors": {
+    "worker": {
+      "sha256": "75dde1fe19b6bc061e3aa1677f1e7fb02759a979cfa23c42e9edc17233b1278c",
+      "meshes": 139,
+      "triangles": 21698
+    },
+    "builder": {
+      "sha256": "ad9277e034f2f79d40bcc2c15da6ca1184574d8d8cd680446865e0b58c4d9069",
+      "meshes": 149,
+      "triangles": 22534
+    },
+    "knight": {
+      "sha256": "139500e8f8ae39aa5709c834d401c25b31eff575afb508cc74e2a855ecd36195",
+      "meshes": 146,
+      "triangles": 24190
+    },
+    "farmer": {
+      "sha256": "79c7c357a57a28bddc289081c9dd1d85ebaa1109ea68a4edae87426d8d87b225",
+      "meshes": 125,
+      "triangles": 19024
+    },
+    "armorer": {
+      "sha256": "00e4d137000c9abdadc1a961b123953a1b10e9448c58381f9b44d7cb6cbf5324",
+      "meshes": 149,
+      "triangles": 22534
+    },
+    "inventor": {
+      "sha256": "9922a2b222828753a28df257b1394d8b42540a2a973ff62cb78276872dc55e25",
+      "meshes": 107,
+      "triangles": 18920
+    },
+    "unassigned": {
+      "sha256": "8c8562b5ff6cb4a1e598dc6ebcf34c798d43988b13a8a3bb8ee057ec64016048",
+      "meshes": 99,
+      "triangles": 17826
+    },
+    "survivor": {
+      "sha256": "8c8562b5ff6cb4a1e598dc6ebcf34c798d43988b13a8a3bb8ee057ec64016048",
+      "meshes": 99,
+      "triangles": 17826
+    },
+    "enemy": {
+      "sha256": "d0ad9b3ba0b09dbf4ae1c4895903e5f2633c78d89ebd751841dc658bfdecb1a6",
+      "meshes": 117,
+      "triangles": 20744
+    },
+    "elite-warden": {
+      "sha256": "0f5e16d94198bbad9bb74fbd4c24c01390b856f88beae59339fd36afae401abc",
+      "meshes": 375,
+      "triangles": 26476
+    },
+    "elite-guardian": {
+      "sha256": "0f5e16d94198bbad9bb74fbd4c24c01390b856f88beae59339fd36afae401abc",
+      "meshes": 375,
+      "triangles": 26476
+    },
+    "horse-chestnut": {
+      "sha256": "bd714462b9f2e3bbe336f5f3aa59ae3a671033def76c70ae86d7537ce24958e9",
+      "meshes": 97,
+      "triangles": 20700
+    },
+    "horse-ivory": {
+      "sha256": "cd7e3bddbe95cd06011cdca770ac0fb6ab17f6de0faf6d75b058c12e28aa7310",
+      "meshes": 97,
+      "triangles": 20700
+    },
+    "horse-night": {
+      "sha256": "8a1f0f617f95e11b5ceec3e1bae75acda6d237cd209987e98eabb4d0e2d71258",
+      "meshes": 97,
+      "triangles": 20700
+    },
+    "pig": {
+      "sha256": "6c0af84d58f3d138849b7c01f5dc82b5544d06306c346055c877c7dbf8596003",
+      "meshes": 37,
+      "triangles": 4272
+    }
+  }
+}

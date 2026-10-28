@@ -8,7 +8,7 @@ const ATLAS_CELLS={grass:[0,0],dirt:[1,0],slate:[2,0],roof:[2,0],wood:[0,1],plas
 const DETAIL_CELLS={cloth:[0,0],brocade:[0,0],leather:[1,0],fur:[2,0],feather:[2,0],foliage:[0,1],leaf:[0,1],bark:[1,1],metal:[2,1]};
 const ACTOR_CELLS={mail:[0,0],quilt:[1,0],horsehide:[2,0],skin:[0,1],hide:[1,1],steel:[2,1]};
 const actorKind=kind=>Object.hasOwn(ACTOR_CELLS,kind);
-const sheetFor=kind=>['linen','hoof'].includes(kind)?'procedural':actorKind(kind)?'actor':DETAIL_CELLS[kind]?'detail':'world';
+const sheetFor=kind=>['linen','hoof','kingHair','kingFur'].includes(kind)?'procedural':actorKind(kind)?'actor':DETAIL_CELLS[kind]?'detail':'world';
 export function createPaintedTextures(renderer){
   const bases=new Map(),records=new Map();let atlas=null,detailAtlas=null,actorAtlas=null,ready=false,failed=false,detailFailed=false,actorFailed=false;
   let pending=Number(!!MATERIAL_ATLAS_URL)+Number(!!DETAIL_ATLAS_URL)+Number(!!ACTOR_ATLAS_URL);
@@ -47,6 +47,14 @@ export function createPaintedTextures(renderer){
       for(let i=0;i<9;i++)for(const side of [-1,1]){c.lineWidth=2;c.strokeStyle='#c4cbb7';const y=40+i*55;c.beginPath();c.moveTo(middle,y+70);c.quadraticCurveTo(middle+side*90,y+25,middle+side*245,y-35);c.stroke();}
     }else if(kind==='bark'){
       fill('#dcd9cd');for(let i=0;i<35;i++){const x=i*17;c.strokeStyle=i%3?'#77766b54':'#ffffff90';c.lineWidth=3+i%4;c.beginPath();c.moveTo(x,-5);c.bezierCurveTo(x+40,170,x-30,340,x+8,SIZE+5);c.stroke();}
+    }else if(kind==='kingHair'||kind==='kingFur'){
+      fill('#eeeeea');
+      const long=kind==='kingHair';
+      for(let i=0;i<(long?3800:5200);i++){
+        const x=r()*SIZE,y=r()*SIZE,length=long?22+r()*37:4+r()*12;
+        c.strokeStyle=i%3?'#736f6722':'#ffffff64';c.lineWidth=.3+r()*.45;
+        for(const oy of [-SIZE,0,SIZE]){c.beginPath();c.moveTo(x,y+oy);c.bezierCurveTo(x-1.8,y+length*.35+oy,x+2.5,y+length*.7+oy,x+.7,y+length+oy);c.stroke();}
+      }
     }else if(kind==='fur'||kind==='feather'||kind==='horsehide'){
       const short=kind==='horsehide';fill(short?'#d9d9d5':'#e3e0d8');for(let i=0;i<(short?8500:3400);i++){const x=r()*SIZE,y=r()*SIZE;c.strokeStyle=i%3?'#877e7138':'#fffdf2a0';c.lineWidth=short?.35:.5+r();c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+(short?1:5),y+(short?1:4),x+(short?.7:2),y+(short?2+r()*3:12+r()*12));c.stroke();}
     }else if(kind==='foliage'){
@@ -124,7 +132,7 @@ export function createPaintedTextures(renderer){
   }
   function updateChannels(base,kind){
     const color=base.color.getContext('2d').getImageData(0,0,SIZE,SIZE),height=base.bump.getContext('2d').createImageData(SIZE,SIZE),rough=base.roughness.getContext('2d').createImageData(SIZE,SIZE);
-    const r=randomFor(kind+'-physical');const targets={mail:138,quilt:232,linen:232,hoof:155,horsehide:128,skin:180,hide:167,steel:102};
+    const r=randomFor(kind+'-physical');const targets={mail:138,quilt:232,linen:232,hoof:155,kingHair:168,kingFur:215,horsehide:128,skin:180,hide:167,steel:102};
     const target=targets[kind]??(kind==='metal'?95:kind==='leather'?180:kind==='slate'?195:['cloth','brocade'].includes(kind)?232:['fur','feather'].includes(kind)?215:238);
     for(let i=0;i<color.data.length;i+=4){const lum=base.relief?.[i/4]??(color.data[i]*.2126+color.data[i+1]*.7152+color.data[i+2]*.0722);
       const strength={mail:1.5,quilt:.8,linen:.65,horsehide:.24,skin:.22,hide:.55,steel:.3}[kind]??.8;
