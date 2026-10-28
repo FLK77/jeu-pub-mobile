@@ -3,6 +3,7 @@ import {HOME,WORLD,FOREST_TREES} from './world-data.js';
 import {JOBS,BUILDINGS,TECHS,RESOURCE_LABELS} from './kingdom-data.js';
 import {GAME_NAME,GAME_VERSION} from './brand.js';
 import {icon,RESOURCE_KEYS} from './icons.js';
+import {ENEMY_TYPES} from './enemy-data.js';
 import {createGame,stepGame,interaction,interact,buy,population,quotas,costs,distance,objective,assignJob,setWeapon,useAxe,placementStatus,placeBuilding,upgradeBuilding,demolishBuilding,research,setWage,customizeKing,customizeKingdom,kingdomStats,attackAt,useDash,usePowerAttack,progressionState} from './simulation.js';
 const $=id=>document.getElementById(id),canvas=$('game');
 let state=createGame(),paused=true,view,last=0,clock=0,noticeTime=0,sound=false,audio,tab='kingdom',placement=null,lastUI=-1,armedDemolition=null;
@@ -13,7 +14,8 @@ const compact=new Intl.NumberFormat('fr-FR',{notation:'compact',maximumFractionD
 let targetingPointer=null,lastHeroLevel=state.king.heroLevel,levelRevealTime=0;
 const eventQueue=[];
 for(const element of document.querySelectorAll('[data-icon]'))element.innerHTML=icon(element.dataset.icon);
-document.title=GAME_NAME+' · V'+GAME_VERSION.split('.').slice(0,2).join('.');
+const [majorVersion,minorVersion]=GAME_VERSION.split('.');
+document.title=GAME_NAME+' · V'+majorVersion+(minorVersion!=='0'?'.'+minorVersion:'');
 const buildingIcons={house:'⌂',wall:'▥',farm:'♧',forge:'⚒',academy:'✧',treasury:'♛'};
 const jobIcons={worker:'⚒',builder:'⌂',knight:'⚔',farmer:'♧',armorer:'⚒',inventor:'✧'};
 const buildingDescriptions={house:'10 places à chaque niveau achevé.',wall:'Un rempart qui protège le royaume.',farm:'Cultures et élevage pour les fermiers.',forge:'Les armuriers y forgent et réparent les armes.',academy:'Un lieu de savoir pour vos inventeurs.',treasury:'Organise la richesse de votre royaume.'};
@@ -28,7 +30,7 @@ function affordable(cost){return Object.entries(cost||{}).every(([k,n])=>(k==='g
 function liveAppearance(){return{name:$('king-name').value,cape:$('appearance-cape').value,hair:$('appearance-hair').value,beard:$('appearance-beard').value,skin:$('appearance-skin').value,crown:$('appearance-crown').value,outfit:$('appearance-outfit').value,emblem:$('appearance-emblem').value,hairStyle:$('appearance-hair-style').value,eye:$('appearance-eye').value,mountCoat:$('appearance-mount-coat').value};}
 function previewKing(){const a=liveAppearance();customizeKing(state,{...a,name:a.name.trim()||'Votre Majesté'});customizeKingdom(state,$('kingdom-name').value||'Valdoria');text('portrait-name',a.name.trim()||'Votre Majesté');if(view)view.setPortrait?.(true);ui(true);}
 try{view=createWorld(canvas);view.setPortrait?.(true);}catch(error){$('graphics-error').hidden=false;console.error('Démarrage 3D impossible',error);}
-function toast(message){text('notice',message);noticeTime=5;$('notice').style.opacity=1;}
+function toast(message){if(!$('menu').hidden){text('menu-feedback',message);noticeTime=0;$('notice').style.opacity=0;return;}text('notice',message);noticeTime=5;$('notice').style.opacity=1;}
 function feedback(result){if(!result)return;text('menu-feedback',result.text||'');toast(result.text||'');if(result.ok)beep(630);ui(true);}
 function summaryCard(title,value,note){return`<article class="summary-card"><small>${esc(title)}</small><strong>${esc(value)}</strong><em>${esc(note)}</em></article>`;}
 function ui(force=false){
@@ -74,6 +76,7 @@ function ui(force=false){
   if(tab==='build')renderBuildings(stats);
   if(tab==='technology')renderResearch(stats);
   if(tab==='journey')renderJourney(journey);
+  if(tab==='defense')renderDefense();
   if(tab==='story'){text('story-objective',objective(state));text('chronicle-kingdom-name','La renaissance de '+(state.kingdomName||'votre royaume'));}
   if(tab==='map'){text('map-kingdom-name','Les terres de '+(state.kingdomName||'votre royaume'));drawMap();}
 }
@@ -82,7 +85,19 @@ function renderResidents(stats){
   html('job-guide',Object.entries(JOBS).map(([key,job])=>`<article><strong>${jobIcons[key]} ${esc(job.label)}</strong><p>${esc(job.description)}${job.unlockLevel>1?' · Royaume niveau '+job.unlockLevel:''}</p></article>`).join(''));
   const sourceNames={rescued:'Survivant secouru',hired:'Habitant engagé',natural:'Arrivée spontanée'};
   const hasAcademy=state.buildings.some(b=>b.type==='academy'&&b.complete&&!b.destroyed);
-  html('citizen-list',state.allies.length?state.allies.map(p=>`<article class="citizen-card"><div><strong>${esc(p.name)}</strong><small>${sourceNames[p.source]||''} · niveau ${p.level||1}<br>${integer(p.xp)} XP · ${p.equipped?'Arme équipée':'Sans arme'}</small></div><select data-citizen-id="${esc(p.id)}" aria-label="Métier de ${esc(p.name)}"><option value="unassigned" ${p.job==='unassigned'?'selected':''}>Choisir un métier</option>${Object.entries(JOBS).map(([key,j])=>`<option value="${key}" ${p.job===key?'selected':''} ${key==='inventor'&&(state.kingdomLevel<4||!hasAcademy)?'disabled':''}>${esc(j.label)}${key==='inventor'?' · niveau 4 + académie':''}</option>`).join('')}</select><div><small>Motivation ${Math.round(p.motivation)} % · ${p.wage} pièces / cycle<br>${esc(p.workStatus||'En attente')}</small><div class="motivation-bar"><i style="width:${Math.max(0,Math.min(100,p.motivation))}%"></i></div></div></article>`).join(''):'<div class="empty-state">Votre peuple n’est pas encore arrivé.<br>Secourez un survivant en forêt et ramenez-le au refuge.</div>');
+  const safety={working:'Au travail',fleeing:'Rejoint son logement',sheltered:'À l’abri chez soi',defending:'Se défend',homeless:'Logement perdu'};
+  html('citizen-list',state.allies.length?state.allies.map(p=>{
+    const home=state.buildings.find(b=>b.id===p.homeId&&!b.destroyed);
+    return`<article class="citizen-card"><div><strong>${esc(p.name)}</strong><small>${sourceNames[p.source]||''} · niveau ${p.level||1}<br>${integer(p.xp)} XP · ${p.equipped?'Arme équipée':'Sans arme'}<br>${Math.ceil(p.hp??90)} / ${p.maxHp??90} PV · ${home?(home.isRefuge?'Refuge royal':'Maison '+esc(home.id.replace('building-',''))):'Sans logement'}</small></div><select data-citizen-id="${esc(p.id)}" aria-label="Métier de ${esc(p.name)}"><option value="unassigned" ${p.job==='unassigned'?'selected':''}>Choisir un métier</option>${Object.entries(JOBS).map(([key,j])=>`<option value="${key}" ${p.job===key?'selected':''} ${key==='inventor'&&(state.kingdomLevel<4||!hasAcademy)?'disabled':''}>${esc(j.label)}${key==='inventor'?' · niveau 4 + académie':''}</option>`).join('')}</select><div><small>Motivation ${Math.round(p.motivation)} % · ${p.wage} pièces / cycle<br><span class="resident-safety" data-safety="${esc(p.safetyState||'working')}">${esc(safety[p.safetyState]||'En poste')}</span><br>${esc(p.workStatus||'En attente')}</small><div class="motivation-bar"><i style="width:${Math.max(0,Math.min(100,p.motivation))}%"></i></div></div></article>`;
+  }).join(''):'<div class="empty-state">Votre peuple n’est pas encore arrivé.<br>Secourez un survivant en forêt et ramenez-le au refuge.</div>');
+}
+function renderDefense(){
+  const civilians=state.allies.filter(p=>p.job!=='knight'),sheltered=civilians.filter(p=>p.sheltered).length,fleeing=civilians.filter(p=>p.safetyState==='fleeing').length,defending=civilians.filter(p=>p.safetyState==='defending').length;
+  const hostiles=state.enemies.filter(e=>e.hp>0),damaged=state.buildings.filter(b=>!b.destroyed&&b.hp<b.maxHp),knights=state.allies.filter(p=>p.job==='knight');
+  html('defense-summary',summaryCard('Assaillants',hostiles.length,state.phase==='raid'?state.left+' renfort(s) encore attendus':'Assaut '+state.wave+' · '+(state.phase==='warning'?'éclaireurs en approche':'accalmie'))+summaryCard('Habitants à l’abri',sheltered+' / '+civilians.length,fleeing+' en repli · '+defending+' en autodéfense')+summaryCard('Chevaliers',knights.length,knights.filter(p=>p.equipped).length+' équipés · '+damaged.length+' ouvrage(s) endommagé(s)')+summaryCard('Pertes civiles',state.residentDeaths||0,'Protégez les routes entre le travail et les logements.'));
+  const groups=new Map();for(const e of hostiles){const kind=e.kind||'raider',tier=e.tier||1,key=kind+':'+tier;const g=groups.get(key)||{label:e.label||ENEMY_TYPES[kind]?.label||'Gardien',tier,count:0};g.count++;groups.set(key,g);}
+  html('active-threats',groups.size?[...groups.values()].map(g=>`<span class="threat-chip">${esc(g.label)} · niv. ${g.tier} <b>× ${g.count}</b></span>`).join(''):'<p class="explain">Aucun ennemi signalé. Les prochaines attaques sont annoncées avant l’arrivée des troupes.</p>');
+  html('enemy-guide',Object.entries(ENEMY_TYPES).map(([kind,e])=>`<article class="enemy-card"><span class="enemy-insignia" style="--enemy-color:${esc(e.color||'#b8715d')}">${{raider:'⚔',skirmisher:'➶',breaker:'⚒',brute:'◆',captain:'⚑'}[kind]||'⚔'}</span><div><h4>${esc(e.label)}</h4><p>${esc(e.description)}</p><small>À partir de l’assaut ${e.unlockWave} · ${e.hp} PV de base</small></div></article>`).join(''));
 }
 function renderBuildings(stats){
   html('build-catalog',Object.entries(BUILDINGS).map(([key,b])=>`<button class="build-card" data-build-type="${key}" ${state.kingdomLevel<b.unlockLevel||state.phase!=='peace'||state.over?'disabled':''}><span>${buildingIcons[key]||'⌂'}</span><strong>${esc(b.label)}</strong><small>${esc(buildingDescriptions[key]||'')}${b.unlockLevel>1?' · Royaume niv. '+b.unlockLevel:''}</small><em>${priceMarkup(b.cost)}</em></button>`).join(''));
@@ -120,7 +135,7 @@ function revealLevel(){
   $('level-reveal').hidden=false;levelRevealTime=8;beep(880);
 }
 function selectTab(name){tab=name;for(const b of document.querySelectorAll('[data-tab]'))b.setAttribute('aria-selected',String(b.dataset.tab===name));for(const el of document.querySelectorAll('.tab'))el.hidden=el.id!=='tab-'+name;ui(true);}
-function openMenu(name){if(state.over||!$('intro').hidden)return;cancelPlacement();paused=true;clearInput();$('menu').hidden=false;$('menu-button').setAttribute('aria-expanded','true');text('menu-feedback','');if(name)selectTab(name);else ui(true);$('close-menu').focus();}
+function openMenu(name){if(state.over||!$('intro').hidden)return;cancelPlacement();paused=true;clearInput();noticeTime=0;$('notice').style.opacity=0;$('menu').hidden=false;$('menu-button').setAttribute('aria-expanded','true');text('menu-feedback','');if(name)selectTab(name);else ui(true);$('close-menu').focus();}
 function closeMenu(){if(!$('intro').hidden||state.over)return;$('menu').hidden=true;paused=false;$('menu-button').setAttribute('aria-expanded','false');clearInput();canvas.focus({preventScroll:true});ui(true);}
 function toggleMenu(){if($('menu').hidden)openMenu();else closeMenu();}
 $('menu-button').onclick=()=>openMenu();$('minimap-button').onclick=()=>openMenu('map');$('close-menu').onclick=closeMenu;$('resume').onclick=closeMenu;
@@ -169,6 +184,7 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else toast('Le terrain occupe toute la fenêtre. Sur iPhone, utilisez l’ajout à l’écran d’accueil.');}catch{toast('Le navigateur refuse ce mode. Le terrain reste adapté à toute la fenêtre.');}};
 document.addEventListener('fullscreenchange',()=>text('fullscreen',document.fullscreenElement?'⛶ Quitter le plein écran':'⛶ Passer en plein écran'));
 $('zoom').oninput=()=>view?.setZoom(Number($('zoom').value));
+$('graphics-quality').onchange=()=>{view?.setQuality?.($('graphics-quality').value);toast('Affichage : '+$('graphics-quality').selectedOptions[0].textContent+'.');};
 function beep(freq){if(!sound)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume().catch(()=>{});const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=freq;g.gain.setValueAtTime(.025,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.12);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+.12);}catch{}}
 $('sound').onclick=()=>{sound=!sound;$('sound').setAttribute('aria-pressed',String(sound));text('sound','Son : '+(sound?'activé':'désactivé'));beep(440);};
 const movementKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','z','q']);
@@ -196,7 +212,7 @@ function stick(e){const r=joystick.getBoundingClientRect(),radius=(r.width-44)/2
 joystick.addEventListener('pointerdown',e=>{if(pointer.id!==null||paused||state.over||(e.pointerType==='mouse'&&e.button!==0))return;e.preventDefault();pointer.id=e.pointerId;joystick.setPointerCapture(e.pointerId);stick(e);});joystick.addEventListener('pointermove',e=>{if(e.pointerId===pointer.id)stick(e);});
 function endStick(e){if(e.pointerId===pointer.id)releaseStick();}joystick.addEventListener('lostpointercapture',endStick);addEventListener('pointerup',endStick);addEventListener('pointercancel',endStick);
 function input(){let x=joy.x,y=joy.y;if(keys.has('arrowleft')||keys.has('q')||keys.has('a'))x--;if(keys.has('arrowright')||keys.has('d'))x++;if(keys.has('arrowup')||keys.has('z')||keys.has('w'))y--;if(keys.has('arrowdown')||keys.has('s'))y++;return{x:x*Math.cos(CAMERA_YAW)+y*Math.sin(CAMERA_YAW),y:-x*Math.sin(CAMERA_YAW)+y*Math.cos(CAMERA_YAW)};}
-function update(dt){if(noticeTime>0){noticeTime-=dt;if(noticeTime<=0)$('notice').style.opacity=0;}if(levelRevealTime>0){levelRevealTime-=dt;if(levelRevealTime<=0)$('level-reveal').hidden=true;}if(!paused&&!state.over){clock+=dt;stepGame(state,dt,input());if(state.events.length){let urgent=null;for(const message of state.events.splice(0)){if(/attaqué|Revenez au refuge|Surprise !|Repli :|Secret révélé|gardiens sont vaincus/i.test(message))urgent=message;else eventQueue.push(message);}if(urgent)toast(urgent);}if(eventQueue.length>12)eventQueue.splice(0,eventQueue.length-12);if(noticeTime<=0&&eventQueue.length)toast(eventQueue.shift());if(state.king.heroLevel>lastHeroLevel)revealLevel();if(state.over){clearInput();cancelPlacement();$('overlay').hidden=false;text('result',population(state)+' habitants · royaume niveau '+state.kingdomLevel+' · '+state.kills+' assaillants repoussés. Votre héritage attend votre retour.');}}ui();}
+function update(dt){if(noticeTime>0){noticeTime-=dt;if(noticeTime<=0)$('notice').style.opacity=0;}if(levelRevealTime>0){levelRevealTime-=dt;if(levelRevealTime<=0)$('level-reveal').hidden=true;}if(!paused&&!state.over){clock+=dt;stepGame(state,dt,input());if(state.events.length){let urgent=null;for(const message of state.events.splice(0)){if(/attaqué|Revenez au refuge|Surprise !|Repli :|Secret révélé|gardiens sont vaincus|Territoire sauvage|détruit|est tombé/i.test(message))urgent=message;else eventQueue.push(message);}if(urgent)toast(urgent);}if(eventQueue.length>12)eventQueue.splice(0,eventQueue.length-12);if(noticeTime<=0&&eventQueue.length)toast(eventQueue.shift());if(state.king.heroLevel>lastHeroLevel)revealLevel();if(state.over){clearInput();cancelPlacement();$('overlay').hidden=false;text('result',population(state)+' habitants · royaume niveau '+state.kingdomLevel+' · '+state.kills+' assaillants repoussés. Votre héritage attend votre retour.');}}ui();}
 function draw(){if(view)view.render(state,clock,paused);}
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();suspend();$('graphics-error').hidden=false;});canvas.addEventListener('webglcontextrestored',()=>{$('graphics-error').hidden=true;toast('La 3D est rétablie. Reprenez depuis le menu.');});
 let chart=null,chartStamp='',chartState=null;
@@ -218,6 +234,12 @@ function mapMarkers(g,project,small=false){
   for(const p of state.camps)if(p.known&&!p.rescued)dot(p,'#ffcf5a',small?3.5:5);
   for(const b of state.buildings)if(!b.isRefuge&&!b.destroyed){const p=project(b);g.fillStyle=b.complete?'#8bdbf1':'#adb9b0';g.fillRect(p.x-2,p.y-2,4,4);}
   const explored=new Set(state.explored);for(const e of state.enemies)if(explored.has(Math.floor(e.x/300)+','+Math.floor(e.y/300)))dot(e,e.elite?'#fc80ab':'#ff7263',small?3:4);
+  for(const animal of state.wildlife||[]){
+    if(animal.hp<=0||distance(animal,state.king)>650||!explored.has(Math.floor(animal.x/300)+','+Math.floor(animal.y/300)))continue;
+    const active=animal.behavior==='defending',color=active?'#ff7263':animal.territorial?'#edb977':'#afcfad';
+    if(animal.territorial&&distance(animal,state.king)<animal.territoryRadius+160){const center=project({x:animal.homeX,y:animal.homeY}),edge=project({x:animal.homeX+animal.territoryRadius,y:animal.homeY});g.strokeStyle=active?'#ff726377':'#edb97766';g.lineWidth=1;g.beginPath();g.arc(center.x,center.y,Math.abs(edge.x-center.x),0,Math.PI*2);g.stroke();}
+    dot(animal,color,small?2.6:3.5);
+  }
   dot(state.horse,'#c79b76',small?4:5);dot(HOME,'#fff4cf',small?5:7);
   const p=project(state.king);g.save();g.translate(p.x,p.y);g.rotate(Math.PI-(state.king.aim||0));g.fillStyle='#b7f0ff';g.strokeStyle='#1f536c';g.lineWidth=1.5;g.beginPath();g.moveTo(0,-(small?8:10));g.lineTo(small?5:6,small?6:8);g.lineTo(0,small?3:4);g.lineTo(small?-5:-6,small?6:8);g.closePath();g.fill();g.stroke();g.restore();
 }
@@ -231,5 +253,6 @@ function drawMinimap(){
   g.restore();g.strokeStyle='#edcf83';g.lineWidth=5;g.beginPath();g.arc(mid,mid,mid-3,0,Math.PI*2);g.stroke();g.strokeStyle='#a9dbc06b';g.lineWidth=1;g.beginPath();g.arc(mid,mid,mid*.53,0,Math.PI*2);g.stroke();
 }
 function drawMap(){const c=$('map'),g=c.getContext('2d');g.drawImage(mapChart(),0,0,c.width,c.height);mapMarkers(g,p=>({x:(p.x-WORLD.minX)/(WORLD.maxX-WORLD.minX)*c.width,y:(p.y-WORLD.minY)/(WORLD.maxY-WORLD.minY)*c.height}));}
-function frame(t){const dt=Math.min((t-last)/1000||0,.1);last=t;update(dt);draw();if(view)requestAnimationFrame(frame);}
+let lastPaint=-Infinity;
+function frame(t){const dt=Math.min((t-last)/1000||0,.1);last=t;if(!document.hidden){update(dt);if(!paused||t-lastPaint>=100){draw();lastPaint=t;}}if(view)requestAnimationFrame(frame);}
 previewKing();ui(true);if(view)requestAnimationFrame(frame);

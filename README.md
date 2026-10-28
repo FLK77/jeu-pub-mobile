@@ -1,16 +1,18 @@
-# Cendrune · V5.6.0
+# Cendrune · V6.0.0
 
-**Bâtissez votre héritage.** Après la chute de Valdor, personnalisez votre souverain, retrouvez son peuple, attribuez ses métiers et reconstruisez un royaume en 3D. La V5.6 se concentre sur le roi : visage mature, cheveux et barbe grisonnants, armure sombre et couronne dorée posée sur les cheveux. Son visage et ses mains utilisent une base anatomique retravaillée ; les vêtements, les cheveux, la barbe et les insignes royaux sont créés pour le jeu. Les habitants, les animaux et les règles de jeu restent ceux de la V5.5.
+**Bâtissez votre héritage.** Après la chute de Valdor, personnalisez votre souverain, retrouvez son peuple, attribuez ses métiers et reconstruisez un royaume en 3D. La V6 développe la défense du royaume et la vie de la forêt : ennemis spécialisés de plusieurs puissances, habitants capables de se mettre à l’abri ou de se défendre, et faune qui protège son territoire. Le rendu limite le travail effectué sur les éléments éloignés pour réduire la charge graphique.
 
-![Souverain de Cendrune V5.6](docs/v5.6-king.png)
+Le souverain détaillé de la V5.6 conserve son visage mature, sa barbe grisonnante, son armure sombre et sa couronne ouvragée.
 
-Vues du modèle de production réalisées avec le moteur du jeu : [buste](docs/v5.6-bust.png) · [visage](docs/v5.6-face.png) · [couronne](docs/v5.6-crown.png) · [mains](docs/v5.6-hands.png) · [portrait de création](docs/v5.6-portrait.png). Les cadrages rapprochés servent au contrôle des détails.
+![Souverain de Cendrune](docs/v5.6-king.png)
 
-Le roi porte une armure sombre, une cape noire par défaut et une couronne ouvragée sans casque. Le visage et les mains dérivent uniquement de données de maillage MakeHuman publiées sous CC0, adaptées aux proportions et au caractère du souverain. Leur provenance, leur empreinte et la licence complète figurent dans [assets/licenses/makehuman-cc0.txt](assets/licenses/makehuman-cc0.txt). Les aperçus des [animaux](docs/v5.5-horse.png) et des [métiers](docs/v5.5-professions.png) de la V5.5 restent disponibles.
+Les vues rapprochées du [buste](docs/v5.6-bust.png), du [visage](docs/v5.6-face.png), de la [couronne](docs/v5.6-crown.png), des [mains](docs/v5.6-hands.png) et du [portrait](docs/v5.6-portrait.png) documentent ce modèle. Son visage et ses mains dérivent uniquement de données de maillage MakeHuman publiées sous CC0, adaptées pour le jeu. Leur provenance, leur empreinte et la licence complète figurent dans [assets/licenses/makehuman-cc0.txt](assets/licenses/makehuman-cc0.txt).
+
+Aperçus des modèles de production V6 : [les cinq ennemis](docs/v6-enemies.png) · [les rangs d’armure](docs/v6-ranks.png) · [la faune forestière](docs/v6-wildlife.png) · [le village](docs/v6-village.png) · [le conseil sur mobile](docs/v6-menaces-mobile.png).
 
 ## Jouer sur PC
 
-1. Télécharger **[Cendrune-PC-V5.6.zip](Cendrune-PC-V5.6.zip)** et choisir **Extraire tout**.
+1. Télécharger **[Cendrune-PC-V6.zip](Cendrune-PC-V6.zip)** et choisir **Extraire tout**.
 2. Ouvrir le dossier **Cendrune-PC**.
 3. Double-cliquer sur **LANCER-JEU.bat**, ou ouvrir `jeu-pc.html` avec Edge, Chrome ou Firefox récent.
 
@@ -34,7 +36,7 @@ Au lancement, nommez votre roi et votre royaume. Choisissez une tenue, une coiff
 | Placer un ouvrage | Choisir le terrain, puis Placer ou Entrée | Toucher le terrain, puis Placer |
 | Rotation / annulation du plan | R / Échap | Boutons Tourner / Annuler |
 
-Les sept ressources restent visibles en haut à gauche ; la mini-carte ronde est en haut à droite et ouvre la grande carte. Le curseur de zoom des Options descend à 0,45 pour prendre davantage de recul.
+Les sept ressources restent visibles en haut à gauche ; la mini-carte ronde est en haut à droite et ouvre la grande carte. Le curseur de zoom des Options descend à 0,45 pour prendre davantage de recul. Les Options proposent aussi une qualité automatique, un mode privilégiant la fluidité et un mode privilégiant les détails.
 
 ## Première partie
 
@@ -46,7 +48,17 @@ Les habitants, le roi et le royaume ont chacun une progression en XP et en nivea
 
 Le roi ne tire plus automatiquement : choisissez votre cible au clic ou au toucher. Les niveaux débloquent une esquive, une attaque puissante puis de nouvelles possibilités d’exploration. Certains lieux réservent des rencontres et des récompenses uniques. La vie du roi peut baisser lors de ces rencontres ; un repli au refuge évite de perdre la partie.
 
-Les règles économiques restent détaillées dans [DESIGN-V3.md](DESIGN-V3.md), le combat et l’exploration dans [DESIGN-V5.md](DESIGN-V5.md), les personnages et animaux dans [DESIGN-V5.5.md](DESIGN-V5.5.md), le nouveau souverain dans [DESIGN-V5.6.md](DESIGN-V5.6.md). Le nom **Cendrune** a donné zéro dépôt dans la recherche GitHub accessible ; les catalogues de jeux ont été bloqués par le réseau. L’exclusivité du nom n’est pas affirmée : voir [NAME-RESEARCH-V5.md](NAME-RESEARCH-V5.md).
+Les règles économiques restent détaillées dans [DESIGN-V3.md](DESIGN-V3.md), le combat et l’exploration dans [DESIGN-V5.md](DESIGN-V5.md), les personnages et animaux dans [DESIGN-V5.5.md](DESIGN-V5.5.md), le souverain dans [DESIGN-V5.6.md](DESIGN-V5.6.md) et les assauts, la protection des habitants et la faune dans [DESIGN-V6.md](DESIGN-V6.md). Le nom **Cendrune** a donné zéro dépôt dans la recherche GitHub accessible ; les catalogues de jeux ont été bloqués par le réseau. L’exclusivité du nom n’est pas affirmée : voir [NAME-RESEARCH-V5.md](NAME-RESEARCH-V5.md).
+
+## Défendre un royaume vivant
+
+Les attaques mélangent progressivement cinq types d’assaillants : pillards, javeliniers, sapeurs, brutes et capitaines. Leurs armes, silhouettes et priorités diffèrent ; quatre rangs de puissance renforcent leurs caractéristiques au fil des vagues. Les ennemis peuvent viser les bâtiments, les habitants et le roi. Les remparts interceptent leur progression : les regrouper autour du seul refuge ne suffit plus à protéger tous les quartiers.
+
+Les habitants disposent de points de vie et d’un logement attribué lorsqu’une place existe. Les non-combattants interrompent leur travail pour rejoindre une maison intacte lorsqu’une menace approche, puis reprennent leur activité une fois la zone sûre. Si un assaillant les accule sans défenseur capable d’intervenir, ils ripostent à courte portée ; ils ne deviennent pas pour autant des soldats. Les chevaliers restent les combattants à équiper et à placer à proximité du peuple.
+
+L’onglet **Menaces** réunit les types d’assaillants, les troupes signalées et la situation des habitants. La carte distingue la faune observée près du roi : vert pour les espèces paisibles, ambre pour un territoire proche et rouge pour un animal qui défend sa zone.
+
+Cerfs et lièvres animent les bois. Loups et sangliers vivent dans des territoires éloignés du refuge et des bâtiments du royaume. Ils avertissent puis défendent leur territoire lorsqu’un intrus s’y attarde, ou réagissent à une attaque directe. Ils abandonnent la poursuite en dehors de leur domaine : ils ne lancent pas d’assaut contre la civilisation. L’extension du royaume les pousse vers des zones plus isolées.
 
 ## Développement
 
@@ -70,6 +82,8 @@ Le script vérifie l’empreinte de la source. Sa sortie par défaut est `assets
 
 - `simulation.js` : règles et progression indépendantes du navigateur.
 - `kingdom-data.js` : métiers, ouvrages, recherches et coûts.
+- `enemy-data.js`, `enemy-models.js` : types d’assaillants, rangs, caractéristiques et équipements visuels.
+- `wildlife.js`, `wildlife-models.js` : population forestière, territoires, comportements et modèles des animaux sauvages.
 - `world-data.js` : région, camps, lieux, forêt et index spatial.
 - `world3d.js`, `forest-models.js` : scène, effets de ciblage/capacités, feuillages, secteurs et niveaux de détail.
 - `animal-models.js` : cheval articulé, pelage, robe, sellerie et détails du harnachement.
@@ -82,7 +96,7 @@ Le script vérifie l’empreinte de la source. Sa sortie par défaut est `assets
 - `game.js`, `index.html`, `style.css` : interface, personnalisation, commandes et placement.
 - `brand.js` : nom et version du jeu.
 
-`npm run build` assemble ces modules, les données anatomiques et Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le document autonome et `Cendrune-PC-V5.6.zip`. `Cendrune-PC.zip`, `Courvane-PC.zip` et `Royaume-PC.zip` sont des alias de la version courante. Le nom de l’archive conserve la version mineure ; les archives V1/V2/V3/V4/V5/V5.5 et leurs tags sont conservés. Les trois atlas et le maillage du roi sont intégrés au script : aucun téléchargement de ces ressources au lancement.
+`npm run build` assemble ces modules, les données anatomiques et Three.js dans `game.bundle.js`. `npm run build:pc` reconstruit aussi le document autonome et `Cendrune-PC-V6.zip`. `Cendrune-PC.zip`, `Courvane-PC.zip` et `Royaume-PC.zip` sont des alias de la version courante. Le nom de l’archive conserve la version mineure ; les archives V1/V2/V3/V4/V5/V5.5/V5.6 et leurs tags sont conservés. Les trois atlas et le maillage du roi sont intégrés au script : aucun téléchargement de ces ressources au lancement.
 
 Les armures, vêtements, cheveux, barbes, couronnes et décors sont des créations du projet inspirées des images transmises. Le visage et les mains du roi sont adaptés du maillage de base MakeHuman hm08 publié sous CC0 ; aucun code du logiciel MakeHuman n’est utilisé. Les données converties sont intégrées au paquet. Les parties statiques sont regroupées avec couleurs de sommets, les arbres instanciés par secteurs et niveaux de détail. `THIRD-PARTY-NOTICES.txt` réunit la licence MIT de Three.js, la provenance anatomique et le texte complet de CC0 ; ce document est aussi inclus dans l’archive PC.
 
@@ -95,6 +109,7 @@ npm run test:pc
 npm run test:graphics
 npm run test:models
 npm run test:realistic
+npm run test:v6
 ```
 
 Les tests V5 couvrent la visée manuelle, les capacités, leurs niveaux requis, les récompenses uniques et les protections des lieux secrets. Les tests navigateur vérifient le HUD, la mini-carte, les gestes de visée, les choix d’apparence et le nom du royaume. Les tests couvrent aussi les anciennes mécaniques (cheval, exploration, escortes, assauts), puis la hache, la capacité, les réservations, les six métiers, la construction, les améliorations, les ressources, les salaires, les niveaux et les recherches. Les tests navigateur exercent le formulaire, les menus, les choix de métiers, les emplacements réels sur le terrain, les boutons tactiles et les neuf formats d’écran.
@@ -105,7 +120,9 @@ Les contrôles de la V5.5 ajoutent les proportions anatomiques, les sommets et i
 
 Les contrôles de la V5.6 portent sur le souverain, ses données anatomiques, les choix de personnalisation et les vues du visage, du buste, de la couronne et des mains. Les accès de contrôle restent propres aux tests. Le paquet PC conserve sa vérification du script exact et de son fonctionnement hors réseau.
 
-Le test PC extrait le ZIP dans un chemin contenant des espaces, vérifie sa version et le script exact, puis exerce l’édition en mode hors réseau. La politique du navigateur cloud bloque `file://` et `data:` : le document extrait est testé via `page.setContent`. Le batch et le double-clic Windows doivent encore être confirmés sur un appareil réel. Les essais matériels iPhone restent également nécessaires. Les entrées sont dimensionnées pour le toucher ; sur mobile, leurs caractères restent à 16 px pour éviter le zoom automatique de Safari.
+Les tests V6 vérifient les profils des assaillants, leurs cibles, les remparts et les abris, la riposte des civils, les territoires et la retraite des animaux. Leur contrôle navigateur utilise la même scène représentative sur ordinateur et mobile simulé, mesure les appels de rendu et vérifie le ciblage tactile des animaux. Les compteurs de rendu ne constituent pas une mesure de FPS sur un téléphone réel.
+
+Le test PC extrait le ZIP de la version courante dans un chemin contenant des espaces, vérifie sa version et le script exact, puis exerce l’édition en mode hors réseau. La politique du navigateur cloud bloque `file://` et `data:` : le document extrait est testé via `page.setContent`. Le batch et le double-clic Windows doivent encore être confirmés sur un appareil réel. Les essais matériels iPhone restent également nécessaires. Les entrées sont dimensionnées pour le toucher ; sur mobile, leurs caractères restent à 16 px pour éviter le zoom automatique de Safari.
 
 Chromium est détecté dans `/usr/bin/chromium`, ou via `CHROMIUM_PATH`. Sinon : `npx playwright install chromium`. WebKit est utilisable après installation avec `BROWSER=webkit npm run test:browser`, mais n’a pas pu être téléchargé ici. Les accès internes utilisés par les tests sont injectés dans leurs seules réponses et ne sont pas livrés au joueur.
 

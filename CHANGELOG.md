@@ -1,5 +1,14 @@
 # Historique
 
+## V6.0.0 — Le royaume se défend
+
+- Cinq types d’ennemis aux silhouettes et équipements distincts : pillard, javelinier, sapeur, brute et capitaine ; quatre rangs de puissance introduits au fil des vagues.
+- Assaillants capables de viser plusieurs bâtiments, les habitants et les défenseurs ; les remparts bloquent leur passage et peuvent être détruits.
+- Points de vie et logements pour les habitants, repli vers une maison intacte, retour au travail après le danger et riposte de proximité lorsqu’aucun défenseur ne peut intervenir.
+- Cerfs, lièvres, sangliers et loups dans les bois ; les espèces territoriales vivent à l’écart du royaume, avertissent les intrus et cessent leur poursuite hors de leur territoire.
+- Rendu des éléments éloignés et ombres réorganisés pour réduire le travail graphique ; apparence détaillée du souverain conservée.
+- Paquet autonome **Cendrune-PC-V6.zip** et test PC lié à la version courante ; archives antérieures conservées.
+
 ## V5.6.0 — Le souverain
 
 - Roi mature aux cheveux et à la barbe grisonnants, armure sombre, cape noire par défaut et couronne dorée portée sans casque.

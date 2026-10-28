@@ -6,6 +6,9 @@ import {createPaintedTextures} from './painted-textures.js';
 import {createRoyalModels} from './royal-models.js';
 import {createForestModels} from './forest-models.js';
 import {createRoyalAnimals} from './animal-models.js';
+import {createRigBatcher} from './render-batching.js';
+import {createEnemyModels} from './enemy-models.js';
+import {createWildlifeModels} from './wildlife-models.js';
 import {BUILDINGS,RESOURCE_NODES} from './kingdom-data.js';
 
 // All scenery is modelled here: the downloadable edition has no remote assets.
@@ -16,8 +19,10 @@ export const CAMERA_YAW = 0.22;
 
 export function createWorld(canvas) {
   const mobile = matchMedia('(pointer: coarse)').matches;
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'low-power' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.25 : 1.5));
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: mobile ? 'default' : 'high-performance' });
+  const maximumPixelRatio=Math.min(devicePixelRatio||1,mobile?1.25:1.5);
+  let quality='auto',autoPixelRatio=Math.min(maximumPixelRatio,mobile?1:1.25),pixelRatio=autoPixelRatio,frameSample=0,frameSamples=0,lastRenderClock=0,lastQualityChange=0;
+  renderer.setPixelRatio(pixelRatio);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -349,7 +354,7 @@ export function createWorld(canvas) {
   const softBox=(p,c,x,y,z,sx,sy,sz)=>mesh(p,softBoxGeo,c,x,y,z,[sx,sy,sz]);
   const softBall=(p,c,x,y,z,sx,sy=sx,sz=sx)=>mesh(p,headGeo,c,x,y,z,[sx,sy,sz]);
   const modelKit={scene,group,mesh,box,ball,cylinder,softBox,softBall,geometry,mat,batch,coneGeo,headGeo};
-  const royal=createRoyalModels(modelKit),animals=createRoyalAnimals(modelKit);
+  const royal=createRoyalModels(modelKit),animals=createRoyalAnimals(modelKit),enemyModels=createEnemyModels(modelKit,royal),wildlifeModels=createWildlifeModels(modelKit),batchRig=createRigBatcher();
   const shadowAreas=new WeakMap();
   function shadowSurfaceArea(m){
     const g=m.geometry,key=[m.scale.x,m.scale.y,m.scale.z].join(',');
@@ -374,15 +379,16 @@ export function createWorld(canvas) {
     const d=actor.userData,parts=(node)=>{const meshes=[];node?.traverse(m=>{if(m.isMesh)meshes.push(m);});return meshes;};
     const articulated=new Set([...d.legs,...d.arms,...(d.skirtPanels||[]),d.cape,d.jobTool,d.weapons,d.health].filter(Boolean)),body=[];
     actor.traverse(m=>{if(!m.isMesh)return;for(let node=m;node&&node!==actor;node=node.parent)if(articulated.has(node))return;body.push(m);});
-    dominantShadows(body,mobile?4:6,!(mobile&&d.designRevision===3));
-    for(const limb of [...d.legs,...d.arms])dominantShadows(parts(limb),mobile?2:3);
+    dominantShadows(body,d.rigidBatches?2:mobile?3:4,!(mobile&&d.designRevision===3));
+    for(const limb of [...d.legs,...d.arms])dominantShadows(parts(limb),mobile?1:2);
     for(const panel of d.skirtPanels||[])dominantShadows(parts(panel),1);
     if(d.cape)dominantShadows(parts(d.cape),2);
     if(d.jobTool)dominantShadows(parts(d.jobTool),2);
     for(const weapon of d.weapons?.children||[])dominantShadows(parts(weapon),2);
     for(const m of parts(d.health))m.castShadow=false;
   }
-  const character=(...args)=>{const actor=royal.character(...args);actorShadows(actor);return actor;};
+  const character=(...args)=>{const actor=royal.character(...args);if(args[0]!=='king')batchRig(actor,{exclude:[actor.userData.health,actor.userData.weapons].filter(Boolean)});actorShadows(actor);return actor;};
+  const enemyCharacter=p=>{const actor=p.encounterId||p.guardian||['guardian','warden'].includes(p.kind)?royal.character('enemy',{elite:!!p.elite,enemyKind:p.kind}):enemyModels.character({kind:p.kind,tier:p.tier,elite:p.elite});batchRig(actor,{exclude:[actor.userData.health,actor.userData.weapons].filter(Boolean)});actorShadows(actor);return actor;};
   function tent(parent,x,z,color='#d6c58c'){
     const t=group(parent,x,0,z);
     for(const side of [-1,1]){const cloth=box(t,color,side*.45,.65,0,1.25,.06,1.65);cloth.rotation.z=side*-.8;}
@@ -412,7 +418,8 @@ export function createWorld(canvas) {
     }
     const chest=box(ruin,'#ad8350',.5,.3,.5,.85,.6,.6);for(const x of [.2,.8])box(ruin,'#efc654',x,.32,.5,.08,.65,.64);box(ruin,'#efc654',.5,.35,.82,.13,.15,.04);
   }
-  let horseModel=animals.horse('chestnut'),mount=horseModel.root,horseLegs=horseModel.legs,horseHead=horseModel.head,tail=horseModel.tail,horseCoat='chestnut';
+  const makeHorse=coat=>{const model=animals.horse(coat);batchRig(model.root);const meshes=[];model.root.traverse(m=>{if(m.isMesh)meshes.push(m);});dominantShadows(meshes,2);return model;};
+  let horseModel=makeHorse('chestnut'),mount=horseModel.root,horseLegs=horseModel.legs,horseHead=horseModel.head,tail=horseModel.tail,horseCoat='chestnut';
   for(const node of RESOURCE_NODES){
     const site=group(scene,wx(node.x),0,wz(node.y));
     if(node.kind==='stone'){
@@ -464,6 +471,11 @@ export function createWorld(canvas) {
     batch(stone);discoveryModels.set(site.id,{root,light,marker});
   }
   batch(scene,[banner,fortifications,mount,...[...camps.values()].map(c=>c.root),...[...discoveryModels.values()].map(c=>c.root)]);
+  // Static matrices never need to be rebuilt during a moving king's frame.
+  // Preserve the small animated branches and the light/camera transforms.
+  const animatedScenery=new Set([banner,fortifications,mount,...smoke,...[...camps.values()].map(c=>c.root),...[...discoveryModels.values()].map(c=>c.root),sun,sun.target,hemi,skyFill]);
+  function freezeScenery(node){if(animatedScenery.has(node))return;node.updateMatrix();node.updateMatrixWorld(true);node.matrixAutoUpdate=false;node.matrixWorldAutoUpdate=false;for(const child of node.children)freezeScenery(child);}
+  for(const node of scene.children)freezeScenery(node);
 
   let king=character('king'),kingSignature='';
   const selection=new THREE.Mesh(new THREE.RingGeometry(.55,.59,40),new THREE.MeshBasicMaterial({color:'#fff1b1',transparent:true,opacity:.85,depthWrite:false}));
@@ -485,21 +497,26 @@ export function createWorld(canvas) {
     box(g,'#c18512',0,0,.055,.05,.18,.02,.4);return g;
   }
   function arrow(p={}){
-    const g=group(scene);const shaft=box(g,p.power?'#ffe591':'#cdb078',0,0,0,.035,.035,.65);shaft.castShadow=false;
-    const tip=mesh(g,coneGeo,'#dfe5df',0,0,.4,[.09,.2,.09],.35);tip.rotation.x=Math.PI/2;
-    box(g,p.power?'#ffd660':'#eee6d0',0,0,-.26,.18,.025,.14);if(p.power)g.scale.setScalar(1.35);return g;
+    const enemy=p.owner==='enemy',g=group(scene);const shaft=box(g,p.power?'#ffe591':enemy?'#80684b':'#cdb078',0,0,0,.035,.035,enemy?.85:.65);shaft.castShadow=false;
+    const tip=mesh(g,coneGeo,enemy?'#c7b4a1':'#dfe5df',0,0,enemy?.5:.4,[.09,.2,.09],.35);tip.rotation.x=Math.PI/2;
+    box(g,p.power?'#ffd660':enemy?'#a54a40':'#eee6d0',0,0,-.26,.18,.025,.14);if(p.power)g.scale.setScalar(1.35);return g;
   }
-  const collections={allies:new Map(),enemies:new Map(),coins:new Map(),arrows:new Map(),particles:new Map(),followers:new Map(),caravans:new Map(),buildings:new Map(),stumps:new Map()};
+  const collections={allies:new Map(),enemies:new Map(),wildlife:new Map(),coins:new Map(),arrows:new Map(),particles:new Map(),followers:new Map(),caravans:new Map(),buildings:new Map(),stumps:new Map()};
   function disposeTree(node){
+    node.userData.rigidSkeleton?.dispose();
     const geo=new Set(),material=new Set();node.traverse(child=>{if(child.userData.ownedGeometry)geo.add(child.geometry);if(child.userData.ownedMaterial){const values=Array.isArray(child.material)?child.material:[child.material];values.forEach(m=>material.add(m));}});
     geo.forEach(g=>g.dispose());material.forEach(m=>m?.dispose());node.removeFromParent();
   }
-  function sync(map,items,make,animate,signature=null){
+  function sync(map,items,make,animate,signature=null,visible=null){
     const alive=new Set(items);
     for(const [item,m]of map)if(!alive.has(item)){disposeTree(m);map.delete(item);}
     for(const item of items){let m=map.get(item);const value=signature?signature(item):null;
+      const inRange=!visible||visible(item);
+      // Do not allocate detailed residents or wildlife on the far side of the
+      // map. Already-created models stay cached but skip posing and rendering.
+      if(!inRange){if(m)m.visible=false;continue;}
       if(m&&signature&&m.userData.signature!==value){disposeTree(m);map.delete(item);m=null;}
-      if(!m){m=make(item);m.userData.signature=value;map.set(item,m);}animate(m,item);
+      if(!m){m=make(item);m.userData.signature=value;map.set(item,m);}m.visible=true;animate(m,item);
     }
   }
   function pose(g,p,time,mounted=false,facing=null,portrait=false){
@@ -514,7 +531,8 @@ export function createWorld(canvas) {
     g.position.set(x,(mounted?rideLift:0)+Math.max(0,Math.sin(time*10+d.phase))*(moving?.025:.003),z);
     if(d.cape)d.cape.rotation.x=(mounted?.26:-.1)+Math.sin(time*3)*.025;
     if(d.weapons?.visible){const axe=p.weapon==='axe';d.axe.visible=axe;d.bow.visible=!axe;d.weapons.rotation.x=axe&&p.axeSwing>0?-.15-Math.sin((.32-p.axeSwing)/.32*Math.PI)*1.4:0;d.weapons.rotation.z=axe?-.15:0;}
-    if(d.jobTool)d.jobTool.rotation.x=p.job==='knight'&&p.meleeCool>0?Math.sin(time*13)*.5:['worker','builder','farmer','armorer'].includes(p.job)?Math.sin(time*3)*.08:0;
+    const attack=Math.max(0,Math.min(1,(p.attackPulse||0)/.3)),attackSwing=Math.sin((1-attack)*Math.PI)*Number(attack>0);
+    if(d.jobTool)d.jobTool.rotation.x=attack>0?(d.enemyKind==='skirmisher'?-.7:-1.0)*attackSwing:['worker','builder','farmer','armorer'].includes(p.job)?Math.sin(time*3)*.08:0;
     for(let i=0;i<2;i++){
       const stride=Math.sin(time*10+i*Math.PI),side=i?1:-1;
       d.legs[i].position.x=side*(mounted?.30:anatomy?.legSpacing??.13);
@@ -522,6 +540,7 @@ export function createWorld(canvas) {
       d.legs[i].rotation.z=mounted?side*.09:0;
       if(d.knees?.[i])d.knees[i].rotation.x=mounted?1.10:moving?Math.max(0,-stride)*.48:0;
       d.arms[i].rotation.x=mounted?-.28:moving?stride*.14:-.06;
+      if(attack>0&&!d.poseRoyal)d.arms[i].rotation.x-=attackSwing*(i===1?.72:.24);
     }
     for(const panel of d.skirtPanels||[]){
       panel.rotation.x=mounted?(panel.userData.front?-.45:.25):moving?Math.sin(time*10+panel.userData.side)*.065:0;
@@ -566,8 +585,31 @@ export function createWorld(canvas) {
     harvestedIndices=new Set(state.harvested||[]);const zero=new THREE.Matrix4().makeScale(0,0,0);
     for(const record of forestInstances){record.mesh.instanceMatrix.array.set(record.original);for(let i=0;i<record.indices.length;i++)if(harvestedIndices.has(record.indices[i]))record.mesh.setMatrixAt(i,zero);record.mesh.instanceMatrix.needsUpdate=true;record.mesh.computeBoundingSphere();}
   }
+  function setQuality(mode){
+    if(!['auto','performance','quality'].includes(mode))mode='auto';
+    quality=mode;frameSample=0;frameSamples=0;lastRenderClock=0;
+    const next=mode==='quality'?maximumPixelRatio:mode==='performance'?Math.min(maximumPixelRatio,mobile?.85:1):autoPixelRatio;
+    if(next!==pixelRatio){pixelRatio=next;renderer.setPixelRatio(pixelRatio);lastWidth=0;}
+  }
+  function sampleFrame(paused){
+    const now=performance.now(),elapsed=now-lastRenderClock;lastRenderClock=now;
+    if(quality!=='auto'||paused||portraitMode||elapsed<4||elapsed>1000)return;
+    frameSample+=Math.min(elapsed,250);frameSamples++;
+    if(frameSamples<30||now-lastQualityChange<5000)return;
+    const average=frameSample/frameSamples;frameSample=0;frameSamples=0;
+    // Hysteresis and a long window avoid resolution oscillations during a
+    // brief model upload, menu transition or browser scheduling interruption.
+    const next=average>29?Math.max(Math.min(.75,maximumPixelRatio),autoPixelRatio-.125):average<19?Math.min(maximumPixelRatio,autoPixelRatio+.125):autoPixelRatio;
+    if(next!==autoPixelRatio){autoPixelRatio=next;lastQualityChange=now;setQuality('auto');}
+  }
+  let shelteredResidents=0;
   let aspect=1,lastWidth=0,lastHeight=0,frames=0,animationTime=0,zoom=1,lastZoom=0,horseLast=null;
+  const followTarget=new THREE.Vector3(),shadowTarget=new THREE.Vector3(),lightDir=new THREE.Vector3(-12,24,12).normalize(),lightRight=new THREE.Vector3(0,1,0).cross(lightDir).normalize(),lightUp=lightDir.clone().cross(lightRight),sunOffset=new THREE.Vector3(-12,24,12),viewFrustum=new THREE.Frustum(),viewProjection=new THREE.Matrix4(),actorSphere=new THREE.Sphere(new THREE.Vector3(),3);
   function render(state,time,paused){
+    sampleFrame(paused);
+    const displayRatio=portraitMode?maximumPixelRatio:quality==='auto'?autoPixelRatio:quality==='performance'?Math.min(maximumPixelRatio,mobile?.85:1):maximumPixelRatio;
+    if(displayRatio!==pixelRatio){pixelRatio=displayRatio;renderer.setPixelRatio(pixelRatio);lastWidth=0;}
+    shelteredResidents=state.allies.filter(p=>p.sheltered).length;
     if(!paused)animationTime=time;
     const rect=canvas.getBoundingClientRect();
     if(rect.width!==lastWidth||rect.height!==lastHeight||zoom!==lastZoom||portraitMode!==lastPortraitMode){
@@ -588,21 +630,24 @@ export function createWorld(canvas) {
     updateHarvest(state);
     // Follow the king, while leaving enough room above him to see incoming danger.
     const tx=wx(state.king.x),tz=wz(state.king.y)-1.4;
-    const target=new THREE.Vector3(tx,.35,tz);
-    camera.position.set(tx+Math.sin(CAMERA_YAW)*23,27,tz+Math.cos(CAMERA_YAW)*23);camera.lookAt(target);camera.updateMatrixWorld();
+    followTarget.set(tx,.35,tz);
+    camera.position.set(tx+Math.sin(CAMERA_YAW)*23,27,tz+Math.cos(CAMERA_YAW)*23);camera.lookAt(followTarget);camera.updateMatrixWorld();
+    viewFrustum.setFromProjectionMatrix(viewProjection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
     pose(king,state.king,animationTime,state.king.mounted);
-    const texel=46/(mobile?1024:1536),lightDir=new THREE.Vector3(-12,24,12).normalize(),right=new THREE.Vector3(0,1,0).cross(lightDir).normalize(),up=lightDir.clone().cross(right);
-    const shadowTarget=new THREE.Vector3(tx,0,tz);shadowTarget.addScaledVector(right,Math.round(shadowTarget.dot(right)/texel)*texel-shadowTarget.dot(right));shadowTarget.addScaledVector(up,Math.round(shadowTarget.dot(up)/texel)*texel-shadowTarget.dot(up));
-    sun.target.position.copy(shadowTarget);sun.target.updateMatrixWorld();sun.position.copy(shadowTarget).add(new THREE.Vector3(-12,24,12));
-    const visibleRadius=Math.max(44,Math.hypot(camera.right-camera.left,(camera.top-camera.bottom)*1.4)*.5+14),nearRadius=mobile?16:18;
+    const shadowSpan=quality==='performance'?32:40,shadowHalf=shadowSpan*.5,texel=shadowSpan/(mobile?1024:1536);
+    if(sun.shadow.camera.right!==shadowHalf){Object.assign(sun.shadow.camera,{left:-shadowHalf,right:shadowHalf,top:shadowHalf,bottom:-shadowHalf});sun.shadow.camera.updateProjectionMatrix();}
+    shadowTarget.set(tx,0,tz);shadowTarget.addScaledVector(lightRight,Math.round(shadowTarget.dot(lightRight)/texel)*texel-shadowTarget.dot(lightRight));shadowTarget.addScaledVector(lightUp,Math.round(shadowTarget.dot(lightUp)/texel)*texel-shadowTarget.dot(lightUp));
+    sun.target.position.copy(shadowTarget);sun.target.updateMatrixWorld();sun.position.copy(shadowTarget).add(sunOffset);
+    const visibleRadius=Math.max(30,Math.hypot(camera.right-camera.left,(camera.top-camera.bottom)*1.4)*.5+12),nearRadius=quality==='performance'?11:mobile?14:16;
     for(const chunk of forestChunks){const d=Math.hypot(chunk.position.x+8-tx,chunk.position.z+8-tz);chunk.visible=d<visibleRadius;chunk.userData.levels[0].visible=d<nearRadius;chunk.userData.levels[1].visible=d>=nearRadius;}
     const nextCoat=state.king.appearance?.mountCoat||'chestnut';
-    if(nextCoat!==horseCoat){disposeTree(mount);horseModel=animals.horse(nextCoat);mount=horseModel.root;horseLegs=horseModel.legs;horseHead=horseModel.head;tail=horseModel.tail;horseCoat=nextCoat;horseLast=null;}
+    if(nextCoat!==horseCoat){disposeTree(mount);horseModel=makeHorse(nextCoat);mount=horseModel.root;horseLegs=horseModel.legs;horseHead=horseModel.head;tail=horseModel.tail;horseCoat=nextCoat;horseLast=null;}
+    actorSphere.center.set(wx(state.horse.x),1.3,wz(state.horse.y));mount.visible=viewFrustum.intersectsSphere(actorSphere);
     const horseMoving=horseLast&&Math.hypot(state.horse.x-horseLast.x,state.horse.y-horseLast.y)>.1;
     mount.position.set(wx(state.horse.x),horseMoving?Math.abs(Math.sin(animationTime*12))*.035:0,wz(state.horse.y));mount.rotation.y=state.horse.aim||0;
     for(let i=0;i<horseLegs.length;i++)horseLegs[i].rotation.x=horseMoving?Math.sin(animationTime*12+(i%3)*Math.PI)*.5:0;
     tail.rotation.z=Math.sin(animationTime*2)*.12;horseHead.rotation.x=state.king.mounted?0:.1+Math.sin(animationTime)*.08;horseLast={...state.horse};
-    for(const p of state.camps){const c=camps.get(p.id);c.root.visible=Math.hypot(wx(p.x)-tx,wz(p.y)-tz)<38;c.npc.visible=!p.rescued;c.marker.visible=!p.rescued;c.marker.position.y=2.5+Math.sin(animationTime*2)*.13;c.flames.scale.y=1+Math.sin(animationTime*9)*.12;}
+    for(const p of state.camps){const c=camps.get(p.id);actorSphere.center.set(wx(p.x),1.3,wz(p.y));c.root.visible=viewFrustum.intersectsSphere(actorSphere);if(!c.root.visible)continue;c.npc.visible=!p.rescued;c.marker.visible=!p.rescued;c.marker.position.y=2.5+Math.sin(animationTime*2)*.13;c.flames.scale.y=1+Math.sin(animationTime*9)*.12;}
     selection.position.set(wx(state.king.x),.055,wz(state.king.y));selection.material.color.set(state.king.hitFlash>0?'#ff736b':'#fff1b1');
     const targetPoint=state.king.target,targetVisible=!!targetPoint&&(state.king.targetTTL||0)>0&&!placement;
     aimRoot.visible=aimLink.visible=targetVisible;
@@ -623,17 +668,42 @@ export function createWorld(canvas) {
     fortifications.visible=(state.buildings?.find(b=>b.isRefuge)?.level||1)>1||state.fort>0;
     banner.rotation.y=Math.sin(animationTime*2)*.12;
     for(let i=0;i<smoke.length;i++){const life=(animationTime*.28+i*.25)%1;smoke[i].position.set(1.06+life*.5,3.72+life*1.7,-.8);smoke[i].scale.setScalar(.18+life*.3);smoke[i].material.opacity=(1-life)*.18;}
-    sync(collections.allies,state.allies,p=>character(p.job||((p.role==='archer')?'knight':p.role==='builder'?'builder':'unassigned')),(m,p)=>pose(m,p,animationTime),p=>p.job||p.role);
-    sync(collections.followers,state.followers,()=>character('survivor'),(m,p)=>pose(m,p,animationTime));
-    sync(collections.caravans,state.caravans,()=>character('survivor'),(m,p)=>pose(m,p,animationTime));
-    sync(collections.enemies,state.enemies,p=>character('enemy',{elite:!!p.elite,enemyKind:p.kind}),(m,p)=>pose(m,p,animationTime,false,p.elite?Math.atan2(state.king.x-p.x,state.king.y-p.y):Math.atan2(500-p.x,240-p.y)),p=>[p.elite,p.kind].join(':'));
+    const inView=p=>{actorSphere.center.set(wx(p.x),1.3,wz(p.y));return viewFrustum.intersectsSphere(actorSphere);},visibleResident=p=>!p.sheltered&&!p.hidden&&inView(p);
+    sync(collections.allies,state.allies,p=>character(p.job||((p.role==='archer')?'knight':p.role==='builder'?'builder':'unassigned')),(m,p)=>pose(m,p,animationTime),p=>p.job||p.role,visibleResident);
+    sync(collections.followers,state.followers,()=>character('survivor'),(m,p)=>pose(m,p,animationTime),null,inView);
+    sync(collections.caravans,state.caravans,()=>character('survivor'),(m,p)=>pose(m,p,animationTime),null,inView);
+    sync(collections.enemies,state.enemies,enemyCharacter,(m,p)=>pose(m,p,animationTime,false,Number.isFinite(p.aim)?p.aim:p.elite?Math.atan2(state.king.x-p.x,state.king.y-p.y):Math.atan2(500-p.x,240-p.y)),p=>[p.elite,p.kind,p.tier,p.guardian].join(':'),inView);
+    sync(collections.wildlife,state.wildlife||[],p=>{
+      const model=wildlifeModels.create(p.kind),root=model.root;
+      root.userData.wildlifeRig=model;batchRig(root);
+      const meshes=[];root.traverse(m=>{if(m.isMesh)meshes.push(m);});dominantShadows(meshes,1);
+      if(p.territorial){
+        const material=new THREE.MeshBasicMaterial({color:'#eac06c',transparent:true,opacity:.24,depthWrite:false}),ring=new THREE.Mesh(geometry('v6-territory-ring',()=>new THREE.RingGeometry(.988,1,72)),material);
+        ring.rotation.x=-Math.PI/2;ring.position.y=.075;ring.visible=false;ring.userData.ownedMaterial=true;ring.userData.territoryIndicator=true;root.add(ring);root.userData.territoryRing=ring;
+      }
+      return root;
+    },(m,p)=>{
+      const rig=m.userData.wildlifeRig,last=m.userData.lastPosition,moving=last&&Math.hypot(p.x-last.x,p.y-last.y)>.03;
+      m.position.set(wx(p.x),0,wz(p.y));m.rotation.y=p.aim||0;
+      const stride=p.kind==='rabbit'?15:p.behavior==='defending'||p.behavior==='fleeing'?12:7;
+      for(let i=0;i<(rig.legs?.length||0);i++)rig.legs[i].rotation.x=moving?Math.sin(animationTime*stride+(i%3)*Math.PI)*.35:0;
+      if(rig.head)rig.head.rotation.x=p.behavior==='grazing'?.23+Math.sin(animationTime*1.7)*.07:p.behavior==='warning'?-.12:Math.sin(animationTime)*.025;
+      if(rig.tail)rig.tail.rotation.z=Math.sin(animationTime*2.1)*.09;
+      const ring=m.userData.territoryRing;
+      if(ring){
+        const near=Math.hypot(state.king.x-p.homeX,state.king.y-p.homeY)<(p.territoryRadius||180)+140;
+        ring.visible=near&&['warning','defending','returning'].includes(p.behavior);
+        if(ring.visible){ring.material.color.set(p.behavior==='defending'?'#ee7164':'#eac06c');ring.scale.setScalar((p.territoryRadius||180)/UNIT);ring.position.x=(p.homeX-p.x)/UNIT*Math.cos(m.rotation.y)-(p.homeY-p.y)/UNIT*Math.sin(m.rotation.y);ring.position.z=(p.homeX-p.x)/UNIT*Math.sin(m.rotation.y)+(p.homeY-p.y)/UNIT*Math.cos(m.rotation.y);}
+      }
+      m.userData.lastPosition={x:p.x,y:p.y};
+    },p=>p.kind,inView);
     sync(collections.coins,state.coins,coin,(m,p)=>{m.position.set(wx(p.x),.4+Math.sin(animationTime*5+p.x)*.07,wz(p.y));m.rotation.y=animationTime*2;});
     sync(collections.arrows,state.arrows,arrow,(m,p)=>{m.position.set(wx(p.x),p.height||1,wz(p.y));m.rotation.y=Math.atan2(p.vx,p.vy);});
     sync(collections.particles,state.particles,()=>ball(scene,'#f0ca67',0,0,0,.055),(m,p)=>m.position.set(wx(p.x),.5+p.life,wz(p.y)));
     sync(collections.buildings,(state.buildings||[]).filter(b=>!b.isRefuge&&!b.destroyed),b=>royal.building(b),(m,b)=>{
       m.position.set(wx(b.x),0,wz(b.y));m.rotation.y=b.rotation||0;
       if(m.userData.progressBar){m.userData.progressBar.quaternion.copy(m.quaternion).invert().multiply(camera.quaternion);const fraction=Math.max(0,Math.min(1,(b.upgrading?b.upgradeProgress:b.progress)/Math.max(1,b.upgrading?b.upgradeWork:b.work)));m.userData.progressFill.scale.x=1.16*fraction;m.userData.progressFill.position.x=-.58+.58*fraction;}
-    },b=>[b.type,b.level,b.complete,b.upgrading].join(':'));
+    },b=>[b.type,b.level,b.complete,b.upgrading].join(':'),inView);
     sync(collections.stumps,state.harvested||[],index=>{const tree=FOREST_TREES[index],g=group(scene,wx(tree.x),0,wz(tree.y));cylinder(g,'#8b6440',0,.13,0,.23*tree.size,.26);cylinder(g,'#d5b682',0,.265,0,.21*tree.size,.025);const log=cylinder(g,'#96734d',.5,.14,.16,.11,.8);log.rotation.z=Math.PI/2;return g;},()=>{});
     renderer.render(scene,camera);frames++;
     canvas.dataset.renderer='webgl2';
@@ -656,15 +726,20 @@ export function createWorld(canvas) {
     // ground projection. A click on a torso or a raised canopy therefore aims
     // at that entity's simulation position rather than behind its feet.
     scene.updateMatrixWorld(true);
-    const candidates=[],enemies=new Map(),treesByMesh=new Map();
+    const candidates=[],enemies=new Map(),wildlife=new Map(),treesByMesh=new Map();
     for(const [owner,model]of collections.enemies){
       if(owner.hp<=0)continue;
       model.traverseVisible(m=>{if(targetMeshVisible(m)){candidates.push(m);enemies.set(m,owner);}});
+    }
+    for(const [owner,model]of collections.wildlife){
+      if(owner.hp<=0||!model.visible)continue;
+      model.traverseVisible(m=>{if(!m.userData.territoryIndicator&&targetMeshVisible(m)){candidates.push(m);wildlife.set(m,owner);}});
     }
     if(trees)for(const record of forestInstances)if(targetMeshVisible(record.mesh,true)){candidates.push(record.mesh);treesByMesh.set(record.mesh,record);}
     for(const intersection of raycaster.intersectObjects(candidates,false)){
       const enemy=enemies.get(intersection.object);
       if(enemy)return{x:enemy.x,y:enemy.y,kind:'enemy',id:enemy.id??null};
+      const animal=wildlife.get(intersection.object);if(animal)return{x:animal.x,y:animal.y,kind:'wildlife',id:animal.id};
       const record=treesByMesh.get(intersection.object),treeIndex=record?.indices[intersection.instanceId];
       if(treeIndex!==undefined&&!harvestedIndices.has(treeIndex)){const tree=FOREST_TREES[treeIndex];if(tree)return{x:tree.x,y:tree.y,kind:'tree',treeIndex};}
     }
@@ -675,5 +750,5 @@ export function createWorld(canvas) {
     const v=new THREE.Vector3(wx(x),height,wz(y)).project(camera);
     return{x:(v.x+1)*lastWidth/2,y:(1-v.y)*lastHeight/2,width:lastWidth,height:lastHeight};
   }
-  return{render,project,screenToWorld,targetAt,setPlacement,setPortrait:value=>{portraitMode=!!value;},setZoom:value=>{zoom=Math.max(.45,Math.min(1.5,Number(value)||1));},diagnostics:()=>({renderer:'webgl2',frames,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fortified:fortifications.visible,actors:1+collections.allies.size+collections.enemies.size,coins:collections.coins.size,arrows:collections.arrows.size,forestTrees:FOREST_TREES.length,mounted:!!king.userData.mounted,followers:collections.followers.size,paintedTextures:painted.count,texturesReady:painted.ready,textureSource:painted.source,detailSource:painted.detailSource,realismSource:painted.realismSource,modelStyle:king.userData.modelStyle,designRevision:king.userData.designRevision,animalStyle:mount.userData.modelStyle,foliageVersion:5,worldArea:(WORLD.maxX-WORLD.minX)*(WORLD.maxY-WORLD.minY),zoom,targeting:aimRoot.visible,targetVisible:aimRoot.visible,targetWorld:aimRoot.visible?{x:aimRoot.position.x*UNIT+500,y:aimRoot.position.z*UNIT+325}:null,horseCoat,animalCoat:horseCoat,discoveries:[...discoveryModels.values()].filter(d=>d.root.visible).length,portrait:portraitMode,equippedWeapon:stateWeapon(),placedBuildings:collections.buildings.size,harvested:collections.stumps.size,kingBodyDepth:king.userData.bodyDimensions?.depth??king.userData.body.scale.z,kingBodyWidth:king.userData.bodyDimensions?.width??king.userData.body.scale.x,modelVersion:king.userData.modelVersion||3,shadowMode:mobile?'dominant-surfaces':'principal-surfaces',memory:{geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,programs:renderer.info.programs?.length||0}})};
+  return{render,project,screenToWorld,targetAt,setPlacement,setQuality,setPortrait:value=>{portraitMode=!!value;},setZoom:value=>{zoom=Math.max(.45,Math.min(1.5,Number(value)||1));},diagnostics:()=>({renderer:'webgl2',frames,quality,pixelRatio,renderQuality:quality==='performance'?'performance':'balanced',rigBatching:true,visibleActors:[...collections.allies.values(),...collections.enemies.values(),...collections.wildlife.values()].filter(m=>m.visible).length,wildlife:collections.wildlife.size,sheltered:shelteredResidents,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,fortified:fortifications.visible,actors:1+collections.allies.size+collections.enemies.size,coins:collections.coins.size,arrows:collections.arrows.size,forestTrees:FOREST_TREES.length,mounted:!!king.userData.mounted,followers:collections.followers.size,paintedTextures:painted.count,texturesReady:painted.ready,textureSource:painted.source,detailSource:painted.detailSource,realismSource:painted.realismSource,modelStyle:king.userData.modelStyle,designRevision:king.userData.designRevision,animalStyle:mount.userData.modelStyle,foliageVersion:5,worldArea:(WORLD.maxX-WORLD.minX)*(WORLD.maxY-WORLD.minY),zoom,targeting:aimRoot.visible,targetVisible:aimRoot.visible,targetWorld:aimRoot.visible?{x:aimRoot.position.x*UNIT+500,y:aimRoot.position.z*UNIT+325}:null,horseCoat,animalCoat:horseCoat,discoveries:[...discoveryModels.values()].filter(d=>d.root.visible).length,portrait:portraitMode,equippedWeapon:stateWeapon(),placedBuildings:collections.buildings.size,harvested:collections.stumps.size,kingBodyDepth:king.userData.bodyDimensions?.depth??king.userData.body.scale.z,kingBodyWidth:king.userData.bodyDimensions?.width??king.userData.body.scale.x,modelVersion:king.userData.modelVersion||3,shadowMode:mobile?'dominant-surfaces':'principal-surfaces',memory:{geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,programs:renderer.info.programs?.length||0}})};
 }

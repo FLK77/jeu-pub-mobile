@@ -61,9 +61,9 @@ test('armorer consumes actual supplies and weapons automatically equip knights',
   const s=world();supplies(s);addResident(s,'rescued');addResident(s,'rescued');const smith=s.allies[0],knight=s.allies[1];assignJob(s,smith.id,'armorer');s.resources.weapons=0;assignJob(s,knight.id,'knight');assert.equal(knight.equipped,false);
   const forge=addBuilding(s,'forge',850,460);Object.assign(smith,{x:forge.x,y:forge.y+BUILDINGS.forge.depth/2+25});const iron=s.resources.iron;stepGame(s,13);assert.ok(s.resources.iron<iron);assert.equal(knight.equipped,true);assert.ok(knight.equipmentDurability>0);
 });
-test('knights defend at melee range and unassigned inhabitants do not fight automatically',()=>{
-  const s=world();addResident(s,'rescued');const p=s.allies[0];setWeapon(s,'axe');s.enemies.push({x:p.x+45,y:p.y+30,hp:40,maxHp:40,speed:0});stepGame(s,1);assert.equal(s.enemies[0].hp,40);
-  assignJob(s,p.id,'knight');stepGame(s,2);assert.equal(s.enemies.length,0);assert.ok(p.xp>0);
+test('knights pursue and fight enemies while unassigned inhabitants never hunt distant threats',()=>{
+  const s=world();addResident(s,'rescued');const p=s.allies[0];setWeapon(s,'axe');s.enemies.push({x:p.x-160,y:p.y+60,hp:40,maxHp:40,speed:0});stepGame(s,1);assert.equal(s.enemies[0].hp,40);
+  assignJob(s,p.id,'knight');stepGame(s,4);assert.equal(s.enemies.length,0);assert.ok(p.xp>0);
 });
 test('development activates wages; paid workers stay motivated and arrears reduce real efficiency',()=>{
   const paid=world(),unpaid=world();for(const s of [paid,unpaid]){addResident(s,'rescued');assignJob(s,s.allies[0].id,'farmer');addBuilding(s,'farm',850,460);Object.assign(s.allies[0],{x:850,y:560});s.kingdomLevel=3;s.xp=300;s.resources.food=500;setWage(s,4);}

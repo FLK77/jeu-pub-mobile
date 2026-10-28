@@ -1,11 +1,11 @@
 {
   "name": "cendrune",
-  "version": "5.6.0",
+  "version": "6.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/server.test.js tests/simulation.test.js tests/v3-simulation.test.js tests/v5-simulation.test.js tests/realistic-models.test.js tests/v56-models.test.js",
+    "test": "node --test tests/server.test.js tests/simulation.test.js tests/v3-simulation.test.js tests/v5-simulation.test.js tests/realistic-models.test.js tests/v56-models.test.js tests/v6-defense.test.js tests/v6-wildlife.test.js tests/v6-models.test.js tests/render-batching.test.js",
     "test:browser": "node --test tests/mobile.browser.cjs",
     "build:pc": "npm run build && python3 scripts/build-pc.py",
     "test:pc": "node --test tests/pc.browser.cjs",
@@ -14,7 +14,8 @@
     "test:models": "node --test tests/realistic-models.test.js",
     "test:realistic": "node --test tests/v56.browser.cjs",
     "test:v5": "node --test tests/v5.browser.cjs",
-    "test:king": "node --test tests/v56-models.test.js tests/v56.browser.cjs"
+    "test:king": "node --test tests/v56-models.test.js tests/v56.browser.cjs",
+    "test:v6": "node --test tests/v6.browser.cjs"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

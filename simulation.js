@@ -1,6 +1,8 @@
 import {HOME,WORLD,HORSE_START,RESCUE_SITES,LANDMARKS,DISCOVERY_SITES,FOREST_TREES,nearbyTrees} from './world-data.js';
 import {JOBS,BUILDINGS,TECHS,RESOURCE_NODES,DEFAULT_APPEARANCE,RESOURCE_LABELS} from './kingdom-data.js';
 import {HERO_UNLOCKS,RELICS} from './progression-data.js';
+import {enemyProfile,raidEnemy} from './enemy-data.js';
+import {createWildlife,stepWildlife,hitWildlife,wildlifeThreats} from './wildlife.js';
 export {JOBS,BUILDINGS,TECHS,HERO_UNLOCKS,RELICS};
 export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export const RIVALS=['la Ligue des Cendres','le duché des Ronces','la Couronne carmin'];
@@ -45,9 +47,9 @@ export function createGame(seed=Date.now()>>>0){
   return{seed,kingdomName:'Valdoria',relics:[],gold:140,hp:160,maxHp:160,wave:0,day:1,level:1,fort:0,capacity:10,kills:0,xp:0,kingdomLevel:1,
     king:{x:500,y:400,cool:0,mounted:false,aim:0,weapon:'bow',axeCool:0,axeSwing:0,xp:0,heroLevel:1,hp:100,maxHp:100,hitFlash:0,invulnerable:0,target:null,targetTTL:0,attackPulse:0,attackKind:'normal',dashCool:0,dashTime:0,dashDirection:{x:0,y:1},powerCool:0,powerTime:0,levelUpPulse:0,appearance:{...DEFAULT_APPEARANCE}},horse:{...HORSE_START,aim:0},
     resources:{wood:140,stone:110,food:120,iron:25,weapons:2,knowledge:0},resourceNodes:RESOURCE_NODES.map(p=>({...p})),
-    buildings:[refuge],nextBuildingId:1,nextCitizenId:0,nextEscortId:0,refugeeRefreshTimer:45,harvested:[],treeHealth:{},tech:[],research:null,
+    buildings:[refuge],nextBuildingId:1,nextCitizenId:0,nextEscortId:0,nextEnemyId:0,residentDeaths:0,refugeeRefreshTimer:45,harvested:[],treeHealth:{},tech:[],research:null,
     payroll:{enabled:false,interval:60,timer:60,wage:2,lastPaid:0,due:0,totalPaid:0,arrears:0},
-    allies:[],enemies:[],arrows:[],coins:[],particles:[],followers:[],caravans:[],counts:{natural:0,hired:0,rescued:0},
+    allies:[],enemies:[],wildlife:createWildlife(seed),hunts:0,arrows:[],coins:[],particles:[],followers:[],caravans:[],counts:{natural:0,hired:0,rescued:0},
     camps:RESCUE_SITES.map((p,i)=>({...p,rescued:false,known:i===0,visits:0,nextRefugeeAt:0})),landmarks:LANDMARKS.map(p=>({...p,known:false,looted:false})),
     discoveries:DISCOVERY_SITES.map(p=>({...p,reward:{...p.reward},known:false,triggered:false,cleared:false,rewardClaimed:false})),
     phase:'peace',phaseRemaining:120,spawn:0,left:0,arrivalTimer:65,income:0,time:0,explored:[],exploredKey:'',
@@ -78,7 +80,8 @@ export function addResident(s,source,reserved=false){
   if(population(s)+remainingReservations>=s.capacity||s.counts[source]+pending(s,source)-(reserved?1:0)>=quotas(s)[source])return false;
   const id=s.nextCitizenId++,i=s.allies.length;
   s.counts[source]++;
-  s.allies.push({id:'citizen-'+id,name:names[id%names.length]+(id>=names.length?' '+(1+Math.floor(id/names.length)):''),source,job:'unassigned',role:'survivor',x:HOME.x-135+(i%6)*50,y:HOME.y+110+Math.floor(i/6)*40,cool:0,workPhase:id,xp:0,level:1,motivation:80,wage:s.payroll.wage,equipped:false,equipmentDurability:0,workTimer:0,workCycles:0,leaveTimer:0,workStatus:'Métier à choisir'});
+  s.allies.push({id:'citizen-'+id,name:names[id%names.length]+(id>=names.length?' '+(1+Math.floor(id/names.length)):''),source,job:'unassigned',role:'survivor',x:HOME.x-135+(i%6)*50,y:HOME.y+110+Math.floor(i/6)*40,cool:0,workPhase:id,xp:0,level:1,hp:90,maxHp:90,homeId:null,safetyState:'working',sheltered:false,hidden:false,selfDefenseCool:0,motivation:80,wage:s.payroll.wage,equipped:false,equipmentDurability:0,workTimer:0,workCycles:0,leaveTimer:0,workStatus:'Métier à choisir'});
+  assignHomes(s);
   gainXP(s,20);return true;
 }
 export function assignJob(s,id,job){
@@ -87,6 +90,7 @@ export function assignJob(s,id,job){
   if(job==='inventor'&&(s.kingdomLevel<4||!activeBuildings(s,'academy').length))return fail('L’inventeur exige le niveau 4 du royaume et une académie achevée.');
   if(p.job===job)return ok('Ce métier est déjà attribué.');
   p.job=job;p.role=job==='unassigned'?'survivor':job;p.workTimer=0;p.target=null;p.workStatus=job==='unassigned'?'Métier à choisir':'En poste';
+  const previous=p.maxHp||90;p.maxHp=job==='knight'?130:90;p.hp=clamp((p.hp??previous)+Math.max(0,p.maxHp-previous),0,p.maxHp);if(job==='knight')leaveShelter(s,p);
   if(job==='knight'&&!p.equipped&&s.resources.weapons>=1){s.resources.weapons--;p.equipped=true;p.equipmentDurability=100;}
   return ok(p.name+' devient '+(JOBS[job]?.label.toLowerCase()||'sans métier')+'.');
 }
@@ -181,9 +185,10 @@ function axeStrike(s,power=false){
   const range=power?128:88,dot=power?-.12:.25,damage=(36+k.heroLevel*4)*(s.tech.includes('weaponry')?1.25:1)*(power?1.9:1);
   const targets=s.enemies.filter(e=>e.hp>0&&inAttackArc(s,e,range,dot));
   for(const e of targets)e.hp-=damage;
+  const animals=(s.wildlife||[]).filter(a=>a.hp>0&&inAttackArc(s,a,range,dot));for(const a of animals)hitWildlife(s,a,damage,k);
   const trees=nearbyTrees(k.x,k.y).filter(t=>treeAvailable(s,t)&&inAttackArc(s,t,range,dot)).sort((a,b)=>distance(a,k)-distance(b,k));
   let chopped=false;for(const tree of trees.slice(0,power?3:1))chopped=chop(s,treeIds.get(tree),power?3:1,true)||chopped;
-  return ok(targets.length?'Coup de hache !':chopped?(power?'La frappe royale abat les arbres dans son arc !':'Du bois rejoint les réserves. Visez encore l’arbre pour l’abattre.'):'Coup de hache : approchez et visez un arbre ou un ennemi.');
+  return ok(targets.length||animals.length?'Coup de hache !':chopped?(power?'La frappe royale abat les arbres dans son arc !':'Du bois rejoint les réserves. Visez encore l’arbre pour l’abattre.'):'Coup de hache : approchez et visez un arbre ou un ennemi.');
 }
 function fireArrow(s,power=false){
   const k=s.king;if(k.cool>0)return fail('L’arc reprend son élan.');
@@ -269,7 +274,7 @@ function hurtHero(s,damage){
   k.hp=Math.max(0,k.hp-damage);k.hitFlash=.3;k.invulnerable=.65;
   if(k.hp>0)return;
   const loss=Math.min(25,Math.floor(s.gold));s.gold-=loss;k.x=500;k.y=400;k.mounted=false;k.hp=k.maxHp;k.invulnerable=3;k.dashTime=0;k.target=null;k.targetTTL=0;
-  event(s,'Vos éclaireurs vous ont ramené au refuge. Repli : '+loss+' pièces perdues. Les gardiens vous attendent encore.');
+  event(s,'Vos éclaireurs vous ont ramené au refuge. Repli : '+loss+' pièces perdues. Votre peuple a encore besoin de vous.');
 }
 function pushFromRect(p,r,radius){if(!insideRect(p,r,radius))return;const left=r.x-r.halfW-radius,right=r.x+r.halfW+radius,top=r.y-r.halfD-radius,bottom=r.y+r.halfD+radius,edges=[p.x-left,right-p.x,p.y-top,bottom-p.y],i=edges.indexOf(Math.min(...edges));if(i===0)p.x=left;if(i===1)p.x=right;if(i===2)p.y=top;if(i===3)p.y=bottom;}
 export function collide(p,radius=12,stateOrLevel=0){
@@ -283,6 +288,147 @@ export function collide(p,radius=12,stateOrLevel=0){
   }
 }
 function moveToward(p,target,speed,dt,stop=0){const d=distance(p,target);if(d>stop){const step=Math.min(d-stop,speed*dt);p.aim=Math.atan2(target.x-p.x,target.y-p.y);p.x+=(target.x-p.x)/d*step;p.y+=(target.y-p.y)/d*step;}}
+function walkAroundTrees(s,p,target,speed,dt,stop=0){
+  let point=target;const dx=target.x-p.x,dy=target.y-p.y,d=Math.hypot(dx,dy);
+  if(d>stop&&d>1){const ux=dx/d,uy=dy/d;let nearest=null,best=Infinity;
+    for(const t of nearbyTrees(p.x,p.y)){if(s.harvested.includes(treeIds.get(t)))continue;const tx=t.x-p.x,ty=t.y-p.y,along=tx*ux+ty*uy,radius=21+9*t.size,cross=tx*uy-ty*ux;
+      if(along>0&&along<Math.min(d,95)&&Math.abs(cross)<radius&&along<best){best=along;nearest={tree:t,side:cross>=0?1:-1,radius};}
+    }
+    if(nearest){const{tree,side,radius}=nearest;point={x:tree.x-uy*side*(radius+15),y:tree.y+ux*side*(radius+15)};}
+  }
+  moveToward(p,point,speed,dt,point===target?stop:0);collide(p,10,s);
+}
+function usableHome(b){return b.type==='house'&&b.complete&&!b.destroyed&&b.hp>0;}
+function homeEntrance(b){const depth=b.depth||BUILDINGS[b.type].depth,angle=b.rotation||0;return{x:b.x-Math.sin(angle)*(depth/2+23),y:b.y+Math.cos(angle)*(depth/2+23)};}
+function assignHomes(s){
+  const homes=s.buildings.filter(usableHome),occupied=new Map(homes.map(b=>[b.id,0]));
+  // Keep each person's address stable until that house is lost or over capacity.
+  for(const p of s.allies){const home=homes.find(b=>b.id===p.homeId);if(home&&(occupied.get(home.id)||0)<BUILDINGS.house.housing*home.level)occupied.set(home.id,occupied.get(home.id)+1);else p.homeId=null;}
+  for(const p of s.allies)if(!p.homeId){let home=null,best=Infinity;for(const b of homes)if(occupied.get(b.id)<BUILDINGS.house.housing*b.level){const d=distance(p,b);if(d<best){home=b;best=d;}}if(home){p.homeId=home.id;occupied.set(home.id,occupied.get(home.id)+1);}}
+}
+function leaveShelter(s,p){
+  if(p.sheltered||p.hidden){const home=s.buildings.find(b=>b.id===p.shelterId);if(home)Object.assign(p,homeEntrance(home));p.sheltered=false;p.hidden=false;p.shelterId=null;collide(p,10,s);}
+}
+// First intersection along a segment with an expanded building footprint.
+function segmentBuilding(a,b,building,padding=0){
+  const r=rectangle(building.type,building.x,building.y,building.rotation,building);let enter=0,exit=1;
+  for(const[axis,half]of[['x',r.halfW+padding],['y',r.halfD+padding]]){
+    const delta=b[axis]-a[axis],low=r[axis]-half,high=r[axis]+half;
+    if(Math.abs(delta)<1e-8){if(a[axis]<low||a[axis]>high)return null;continue;}
+    let t0=(low-a[axis])/delta,t1=(high-a[axis])/delta;if(t0>t1)[t0,t1]=[t1,t0];enter=Math.max(enter,t0);exit=Math.min(exit,t1);if(enter>exit)return null;
+  }
+  return enter>=0&&enter<=1?enter:null;
+}
+function firstObstruction(s,a,b,exclude=null,padding=8){let result=null,best=Infinity;for(const building of s.buildings){if(building.destroyed||building.hp<=0||building===exclude)continue;const t=segmentBuilding(a,b,building,padding);if(t!==null&&t<best){best=t;result=building;}}return result;}
+function navigationClear(s,a,b){
+  for(const building of s.buildings){if(building.destroyed||building.hp<=0)continue;const r=rectangle(building.type,building.x,building.y,building.rotation,building);
+    // A person already touching a wall can step out of the navigation margin;
+    // the smaller physical collision margin still prevents crossing the wall.
+    const padding=insideRect(a,r,16)||insideRect(b,r,16)?9:16;
+    if(segmentBuilding(a,b,building,padding)!==null)return false;
+  }return true;
+}
+function navigationPath(s,start,goal){
+  const nodes=[{x:start.x,y:start.y},{x:goal.x,y:goal.y}],minX=Math.min(start.x,goal.x)-400,maxX=Math.max(start.x,goal.x)+400,minY=Math.min(start.y,goal.y)-400,maxY=Math.max(start.y,goal.y)+400;
+  const solids=s.buildings.filter(b=>!b.destroyed&&b.hp>0),near=solids.filter(b=>b.x>=minX&&b.x<=maxX&&b.y>=minY&&b.y<=maxY);
+  for(const building of near){const r=rectangle(building.type,building.x,building.y,building.rotation,building);for(const x of[r.x-r.halfW-24,r.x+r.halfW+24])for(const y of[r.y-r.halfD-24,r.y+r.halfD+24]){
+    const node={x,y};if(solids.some(b=>insideRect(node,rectangle(b.type,b.x,b.y,b.rotation,b),16)))continue;nodes.push(node);
+  }}
+  const count=nodes.length,cost=new Float64Array(count).fill(Infinity),estimate=new Float64Array(count).fill(Infinity),previous=new Int32Array(count).fill(-1),visited=new Uint8Array(count),visibility=new Map();cost[0]=0;estimate[0]=distance(start,goal);
+  // Visibility-graph A*: only an obstructed trip builds this small town graph.
+  // Each edge is checked against every building, so adjacent houses cannot
+  // hide another collision behind an apparently clear corner of the first.
+  for(let iteration=0;iteration<count;iteration++){
+    let current=-1,best=Infinity;for(let i=0;i<count;i++)if(!visited[i]&&estimate[i]<best){best=estimate[i];current=i;}
+    if(current<0)return[];if(current===1){const path=[];for(let i=1;i>0;i=previous[i])path.unshift(nodes[i]);return path;}
+    visited[current]=1;
+    for(let next=0;next<count;next++){if(visited[next]||next===current)continue;const alternative=cost[current]+distance(nodes[current],nodes[next]);if(alternative>=cost[next])continue;
+      const key=Math.min(current,next)*count+Math.max(current,next);let clear=visibility.get(key);if(clear===undefined){clear=navigationClear(s,nodes[current],nodes[next]);visibility.set(key,clear);}if(!clear)continue;
+      cost[next]=alternative;estimate[next]=alternative+distance(nodes[next],goal);previous[next]=current;
+    }
+  }return[];
+}
+function navigate(p,target,speed,dt,s,stop=0){
+  if(distance(p,target)<=stop)return;p.navRetry=Math.max(0,(p.navRetry||0)-dt);
+  const sameGoal=p.navGoal&&distance(p.navGoal,target)<20;if(!sameGoal){p.navPath=null;p.navRetry=0;}
+  while(p.navPath?.length&&distance(p,p.navPath[0])<1)p.navPath.shift();
+  let point=p.navPath?.[0]||target;
+  if(!navigationClear(s,p,point)){
+    if(!p.navRetry){p.navPath=navigationPath(s,p,target);p.navGoal={x:target.x,y:target.y};p.navRetry=p.navPath.length?0:.5;}
+    point=p.navPath?.[0];if(!point){p.routeBlocked=true;return;}
+  }
+  p.routeBlocked=false;p.navWaypoint=point===target?null:point;walkAroundTrees(s,p,point,speed,dt,point===target?stop:0);
+}
+function actorThreats(s,p,radius=280){
+  const threats=[];for(const e of s.enemies)if(e.hp>0&&distance(p,e)<radius)threats.push(e);
+  threats.push(...wildlifeThreats(s,p,radius));
+  return threats;
+}
+function defended(s,p,threat){
+  if(s.allies.some(q=>q!==p&&q.job==='knight'&&q.hp>0&&!q.sheltered&&distance(q,threat)<180&&!firstObstruction(s,q,threat)))return true;
+  return s.king.hp>0&&s.king.targetTTL>0&&distance(s.king,threat)<(s.king.weapon==='bow'?360:100)&&!firstObstruction(s,s.king,threat);
+}
+function residentSafety(s,p,dt){
+  p.hp??=90;p.maxHp??=90;p.selfDefenseCool=Math.max(0,(p.selfDefenseCool||0)-dt);p.attackPulse=Math.max(0,(p.attackPulse||0)-dt);p.meleeCool=Math.max(0,(p.meleeCool||0)-dt);
+  const threats=actorThreats(s,p),alarm=s.phase!=='peace'||threats.length>0,home=s.buildings.find(b=>b.id===p.homeId&&usableHome(b));
+  if(p.sheltered&&(!home||p.shelterId!==home.id))leaveShelter(s,p);
+  if(!alarm){leaveShelter(s,p);p.safetyState='working';p.hp=Math.min(p.maxHp,p.hp+dt*1.6);return false;}
+  if(p.sheltered){p.safetyState='sheltered';p.workStatus='À l’abri dans sa maison';return true;}
+  const close=threats.filter(e=>distance(p,e)<70&&!firstObstruction(s,p,e)).sort((a,b)=>distance(p,a)-distance(p,b))[0];
+  const selfDefense=close&&!defended(s,p,close);
+  if(selfDefense){
+    p.safetyState='defending';p.workStatus='Se défend en attendant les secours';p.aim=Math.atan2(close.x-p.x,close.y-p.y);
+    if(p.selfDefenseCool<=0){p.selfDefenseCool=1.25;p.attackPulse=.3;p.meleeCool=.3;const damage=(p.equipped?13:8)*(1+Math.max(0,(p.level||1)-1)*.05);if(close.territorial)hitWildlife(s,close,damage,p);else close.hp-=damage;residentXP(p,1);}
+  }else{p.safetyState=home?'fleeing':'homeless';p.workStatus=home?'Rejoint sa maison pour se protéger':'Sans abri : cherche une protection';}
+  if(home){const entry=homeEntrance(home);navigate(p,entry,135,dt,s,4);
+    // A closed door protects its occupants until the building is actually lost.
+    if(distance(p,entry)<18&&!threats.some(e=>distance(e,entry)<43)){p.sheltered=true;p.hidden=true;p.shelterId=home.id;p.safetyState='sheltered';p.workStatus='À l’abri dans sa maison';p.x=home.x;p.y=home.y;p.navWaypoint=null;}
+  }else if(!selfDefense){const guard=s.allies.find(q=>q.job==='knight'&&q.hp>0);navigate(p,guard||s.king,110,dt,s,75);}
+  return true;
+}
+function hurtResident(s,p,damage){if(p.sheltered||p.hidden||p.hp<=0)return;p.hp=Math.max(0,(p.hp??90)-damage);p.hitFlash=.25;p.motivation=clamp(p.motivation-damage*.05,0,100);}
+function clearDeadResidents(s){
+  for(const p of s.allies)if(p.hp<=0){s.residentDeaths=(s.residentDeaths||0)+1;if(Object.hasOwn(s.counts,p.source))s.counts[p.source]=Math.max(0,s.counts[p.source]-1);event(s,p.name+' est tombé en défendant le royaume.');}
+  s.allies=s.allies.filter(p=>p.hp>0);
+}
+function destroyBuilding(s,b){
+  if(b.destroyed)return;b.hp=0;b.destroyed=true;b.complete=false;b.upgrading=false;
+  if(b.isRefuge)s.hp=0;
+  event(s,(BUILDINGS[b.type]?.label||'Bâtiment')+' détruit !');recalculateCapacity(s);
+  for(const p of s.allies)if(p.shelterId===b.id)leaveShelter(s,p);
+  assignHomes(s);
+}
+function damageBuilding(s,b,damage){if(b.destroyed)return;if(b.isRefuge){s.hp=Math.max(0,s.hp-damage*(s.relics.includes('founders-banner')?.9:1));b.hp=s.hp;}else b.hp=Math.max(0,b.hp-damage);if(b.hp<=0)destroyBuilding(s,b);}
+function buildingPoint(e,b){const r=rectangle(b.type,b.x,b.y,b.rotation,b);return{x:clamp(e.x,r.x-r.halfW,r.x+r.halfW),y:clamp(e.y,r.y-r.halfD,r.y+r.halfD)};}
+function chooseEnemyTarget(s,e){
+  let target=null,type=null,score=Infinity;
+  const consider=(object,kind,weight)=>{const point=kind==='building'?buildingPoint(e,object):object,d=distance(e,point),value=d*weight;if(value<score){score=value;target=object;type=kind;}};
+  for(const b of s.buildings)if(!b.destroyed&&b.hp>0){let weight=e.kind==='breaker'?.58:1.12;if(b.type==='wall')weight*=1.1;if(b.isRefuge)weight*=1.15;consider(b,'building',weight);}
+  for(const p of s.allies)if(p.hp>0&&!p.sheltered&&!p.hidden&&distance(e,p)<520){const defender=p.job==='knight';consider(p,'resident',e.kind==='breaker'?2:e.kind==='captain'&&defender?.6:defender?.85:.65);}
+  if(distance(e,s.king)<460)consider(s.king,'king',e.kind==='captain'?.65:e.kind==='breaker'?1.8:.95);
+  e.targetType=type;e.targetId=type==='king'?'king':target?.id||null;return target;
+}
+function updateRaider(s,e,dt){
+  if(!e.combatReady){const profile=enemyProfile(e.kind,e.tier);e.kind??=profile.kind;e.tier??=profile.tier;e.label??=profile.label;e.tierLabel??=profile.tierLabel;e.damage??=profile.damage;e.buildingDamage??=profile.buildingDamage;e.range??=profile.range;e.cooldown??=profile.cooldown;e.combatReady=true;}
+  e.cool=Math.max(0,(e.cool||0)-dt);e.attackPulse=Math.max(0,(e.attackPulse||0)-dt);e.meleeCool=Math.max(0,(e.meleeCool||0)-dt);
+  e.thinkCool=Math.max(0,(e.thinkCool||0)-dt);let target=e.targetObject;
+  const valid=target&&(e.goalType==='building'?!target.destroyed&&target.hp>0:target.hp>0&&!target.hidden&&!target.sheltered&&distance(e,target)<600);
+  if(!valid||e.thinkCool<=0){target=chooseEnemyTarget(s,e);e.targetObject=target;e.goalType=e.targetType;e.thinkCool=.25+(e.tier%3)*.035;}
+  else{e.targetType=e.goalType;e.targetId=e.goalType==='king'?'king':target.id;}
+  if(!target)return;
+  let building=e.targetType==='building'?target:null,point=building?buildingPoint(e,building):target;
+  // An attacker must break a wall in its path before reaching people behind it.
+  const block=firstObstruction(s,e,point,building,11);if(block){building=block;point=buildingPoint(e,building);e.targetType='building';e.targetId=building.id;}
+  const range=building?48:e.range,stop=building?20:Math.max(35,range-14);
+  e.aim=Math.atan2(point.x-e.x,point.y-e.y);walkAroundTrees(s,e,point,e.speed||0,dt,stop);
+  point=building?buildingPoint(e,building):target;
+  if(distance(e,point)>range||e.cool>0||firstObstruction(s,e,point,building,2))return;
+  e.cool=e.cooldown;e.attackPulse=.3;e.meleeCool=.3;
+  if(building)damageBuilding(s,building,e.buildingDamage);
+  else if(e.kind==='skirmisher'){
+    const dx=target.x-e.x,dy=target.y-e.y,d=Math.hypot(dx,dy)||1;s.arrows.push({x:e.x,y:e.y,vx:dx/d*340,vy:dy/d*340,life:.85,damage:e.damage,height:1.15,owner:'enemy',sourceId:e.id,hitTargets:[]});
+  }else if(e.targetType==='king')hurtHero(s,e.damage);else hurtResident(s,target,e.damage);
+}
 function efficiency(p){return p.motivation<15?.12:(.25+.75*p.motivation/100)*(1+(p.level-1)*.06);}
 function updatePayroll(s,dt){
   const workers=s.allies.filter(p=>p.job!=='unassigned');s.payroll.enabled=s.kingdomLevel>=3||population(s)>=10;
@@ -345,11 +491,12 @@ function productiveWork(s,p,dt){
   }
 }
 function knightWork(s,p,dt){
+  leaveShelter(s,p);p.safetyState='defending';p.hp??=130;p.maxHp??=130;
   p.cool-=dt;if(!p.equipped&&s.resources.weapons>=1){s.resources.weapons--;p.equipped=true;p.equipmentDurability=100;}
-  let target=null,best=420;for(const e of s.enemies){const d=distance(p,e);if(e.hp>0&&d<best){target=e;best=d;}}
-  if(!target){p.workStatus=p.equipped?'Garde équipée':'Garde sans arme';return;}
-  p.workStatus='Défend le royaume';moveToward(p,target,110,dt,55);collide(p,10,s);
-  if(distance(p,target)<86&&p.cool<=0){p.cool=.8;target.hp-=(p.equipped?34:13)*efficiency(p)*(s.tech.includes('weaponry')?1.25:1);residentXP(p,3);if(p.equipped){p.equipmentDurability-=1;if(p.equipmentDurability<=0)p.equipped=false;}}
+  let target=null,best=420;for(const e of [...s.enemies,...(s.wildlife||[]).filter(a=>a.state==='defending')]){const d=distance(p,e);if(e.hp>0&&d<best){target=e;best=d;}}
+  if(!target){p.safetyState='working';p.workStatus=p.equipped?'Garde équipée':'Garde sans arme';if(s.phase==='peace')p.hp=Math.min(p.maxHp,p.hp+dt*1.6);return;}
+  p.workStatus='Défend le royaume';navigate(p,target,110,dt,s,48);
+  if(distance(p,target)<78&&p.cool<=0&&!firstObstruction(s,p,target)){p.cool=.8;p.meleeCool=.28;p.attackPulse=.28;const damage=(p.equipped?34:13)*efficiency(p)*(s.tech.includes('weaponry')?1.25:1);if(target.territorial)hitWildlife(s,target,damage,p);else target.hp-=damage;residentXP(p,3);if(p.equipped){p.equipmentDurability-=1;if(p.equipmentDurability<=0)p.equipped=false;}}
 }
 function tick(s,dt,input){
   if(s.over)return;s.time+=dt;recalculateCapacity(s);const k=s.king;
@@ -361,9 +508,11 @@ function tick(s,dt,input){
   const speed=k.mounted?380:190,dx=input.x||0,dy=input.y||0,n=Math.max(1,Math.hypot(dx,dy));
   if(dx||dy){k.aim=Math.atan2(dx,dy);k.x+=dx/n*speed*dt;k.y+=dy/n*speed*dt;collide(k,k.mounted?21:12,s);}
   if(k.mounted){s.horse.x=k.x;s.horse.y=k.y;s.horse.aim=k.aim;}
-  updatePayroll(s,dt);
+  assignHomes(s);updatePayroll(s,dt);
   for(const p of s.allies){
+    if(p.hp<=0)continue;p.hitFlash=Math.max(0,(p.hitFlash||0)-dt);
     if(p.job==='knight')knightWork(s,p,dt);
+    else if(residentSafety(s,p,dt))continue;
     else if(p.job==='unassigned')p.workStatus='Métier à choisir';
     else if(s.phase==='peace')productiveWork(s,p,dt);
     else p.workStatus='À l’abri pendant l’assaut';
@@ -395,31 +544,37 @@ function tick(s,dt,input){
   const cell=Math.floor(k.x/300)+','+Math.floor(k.y/300);if(cell!==s.exploredKey){s.exploredKey=cell;if(!s.explored.includes(cell))s.explored.push(cell);}
   if(s.phase!=='raid'){s.phaseRemaining-=dt;if(s.phaseRemaining<=0){if(s.phase==='peace'){s.phase='warning';s.phaseRemaining=25;s.rival=RIVALS[Math.floor(random(s)*RIVALS.length)];event(s,'Des éclaireurs de '+s.rival+' approchent. Revenez au refuge !');}else{s.phase='raid';s.wave++;s.left=5+s.wave*2;s.spawn=1;event(s,'Le refuge est attaqué par '+s.rival+' !');}}}
   if(s.phase==='raid'){
-    s.spawn-=dt;if(s.left>0&&s.spawn<=0){s.left--;s.spawn=1.5;const x=HOME.x+(random(s)-.5)*1000,y=HOME.y+820+random(s)*130;s.enemies.push({x,y,hp:48+s.wave*9,maxHp:48+s.wave*9,speed:39+s.wave*2,aim:0});}
+    s.spawn-=dt;if(s.left>0&&s.spawn<=0){s.left--;s.spawn=1.5;const x=HOME.x+(random(s)-.5)*1000,y=HOME.y+820+random(s)*130,index=5+s.wave*2-s.left-1;s.enemies.push(raidEnemy(s.wave,index,x,y,'enemy-'+s.nextEnemyId++));}
     if(s.left===0&&!s.enemies.some(e=>!e.encounterId&&e.hp>0)){s.phase='peace';s.day++;s.phaseRemaining=90+random(s)*80;gainXP(s,25);event(s,'L’assaut est repoussé. Profitez de l’accalmie pour reconstruire.');}
   }
   for(const e of s.enemies){
     if(e.hp<=0)continue;
     if(e.encounterId){
       const home={x:e.homeX,y:e.homeY};e.cool=Math.max(0,(e.cool||0)-dt);
-      if(distance(k,home)<540){moveToward(e,k,e.speed,dt,46);collide(e,10,s);if(distance(e,k)<64&&e.cool<=0){e.cool=e.kind==='warden'?1.7:1.3;hurtHero(s,e.kind==='warden'?22:12);}}
+      if(distance(k,home)<540){navigate(e,k,e.speed,dt,s,46);if(distance(e,k)<64&&e.cool<=0&&!firstObstruction(s,e,k)){e.cool=e.kind==='warden'?1.7:1.3;hurtHero(s,e.kind==='warden'?22:12);}}
       else moveToward(e,home,e.speed,dt,28);
       continue;
     }
-    const goal=e.y>360&&Math.abs(e.x-500)>65?{x:500,y:395}:HOME;
-    if(distance(e,HOME)>102){
-      const old={x:e.x,y:e.y};moveToward(e,goal,e.speed,dt);const obstruction=s.buildings.find(b=>!b.isRefuge&&b.complete&&!b.destroyed&&insideRect(e,rectangle(b.type,b.x,b.y,b.rotation,b),18));
-      if(obstruction){e.x=old.x;e.y=old.y;obstruction.hp-=dt*(6+s.wave);if(obstruction.hp<=0){obstruction.hp=0;obstruction.destroyed=true;obstruction.complete=false;event(s,BUILDINGS[obstruction.type].label+' détruit !');}}
-    }else s.hp-=dt*(3+s.wave*.4)*(s.relics.includes('founders-banner')?.9:1);
+    updateRaider(s,e,dt);
   }
   for(const a of s.arrows){
-    a.x+=a.vx*dt;a.y+=a.vy*dt;a.life-=dt;if(a.life<=0)continue;a.hitTargets??=[];
+    const before={x:a.x,y:a.y};a.x+=a.vx*dt;a.y+=a.vy*dt;a.life-=dt;if(a.life<=0)continue;a.hitTargets??=[];
+    if(a.owner==='enemy'){
+      if(firstObstruction(s,before,a,null,2)){a.life=0;continue;}
+      if(distance(a,k)<24){hurtHero(s,a.damage);a.life=0;continue;}
+      const hit=s.allies.find(p=>p.hp>0&&!p.sheltered&&!p.hidden&&distance(a,p)<24);if(hit){hurtResident(s,hit,a.damage);a.life=0;}continue;
+    }
     for(const e of s.enemies)if(e.hp>0&&!a.hitTargets.includes(e)&&distance(a,e)<25){
       e.hp-=a.damage;a.hitTargets.push(e);a.pierce=(a.pierce??1)-1;
       for(let i=0;i<4;i++)s.particles.push({x:e.x,y:e.y,life:.4,vx:(random(s)-.5)*60,vy:(random(s)-.5)*60});
       if(a.pierce<=0){a.life=0;break;}
     }
+    if(a.life>0)for(const animal of s.wildlife||[])if(animal.hp>0&&!a.hitTargets.includes(animal)&&distance(a,animal)<(animal.kind==='rabbit'?16:25)){
+      hitWildlife(s,animal,a.damage,k);a.hitTargets.push(animal);a.pierce=(a.pierce??1)-1;if(a.pierce<=0){a.life=0;break;}
+    }
   }
+  stepWildlife(s,dt,{hurtHero});
+  clearDeadResidents(s);
   s.arrows=s.arrows.filter(a=>a.life>0);s.enemies=s.enemies.filter(e=>{if(e.hp>0)return true;s.kills++;gainXP(s,e.kind==='warden'?65:e.elite?28:20,true);gainXP(s,e.elite?12:8);s.coins.push({x:e.x,y:e.y,value:e.elite?18:12,age:0});return false;});
   for(const d of s.discoveries)if(d.triggered&&!d.cleared&&!s.enemies.some(e=>e.encounterId===d.id&&e.hp>0)){d.cleared=true;event(s,'Les gardiens sont vaincus ! Le coffre de '+d.name.toLowerCase()+' peut être ouvert.');}
   s.coins=s.coins.filter(c=>{c.age+=dt;const d=distance(c,k);if(d<110){c.x+=(k.x-c.x)*Math.min(1,dt*9);c.y+=(k.y-c.y)*Math.min(1,dt*9);}if(d<25){s.gold+=c.value;return false;}return true;});
@@ -457,7 +612,7 @@ export function kingdomStats(s){
   const count=population(s),assigned=s.allies.filter(p=>p.job!=='unassigned'),jobs=Object.fromEntries(Object.keys(JOBS).map(k=>[k,s.allies.filter(p=>p.job===k).length]));
   const motivation=count?s.allies.reduce((n,p)=>n+p.motivation,0)/count:100,eff=assigned.length?assigned.reduce((n,p)=>n+efficiency(p),0)/assigned.length:0;
   const due=assigned.reduce((n,p)=>n+p.wage,0),heroNext=xpForLevel(s.king.heroLevel+1,true),kingdomNext=xpForLevel(s.kingdomLevel+1),farms=activeBuildings(s,'farm'),alerts=[];
-  const foodProduction=s.phase==='peace'?s.allies.filter(p=>p.job==='farmer').reduce((n,p)=>{
+  const foodProduction=s.phase==='peace'?s.allies.filter(p=>p.job==='farmer'&&!p.sheltered&&(!p.safetyState||p.safetyState==='working')).reduce((n,p)=>{
     const farm=farms[p.workPhase%farms.length];if(!farm)return n;
     const target={x:farm.x,y:farm.y+BUILDINGS.farm.depth/2+25};
     return n+(distance(p,target)<=80?.42*efficiency(p)*farm.level*(s.tech.includes('agriculture')?1.5:1):0);

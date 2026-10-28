@@ -81,7 +81,7 @@ async function hud(page){
 }
 
 test('V5 desktop: authored sovereigns, material HUD, click targeting, skills and populated forest',async t=>{
-  const page=await open(t);assert.match(await page.title(),/Cendrune.*V5/);
+  const page=await open(t);assert.equal(await page.title(),'Cendrune · V'+(()=>{const [major,minor]=require('../package.json').version.split('.');return minor==='0'?major:major+'.'+minor;})());
   await shot(page,'v5-portrait-royal-desktop');
   await page.locator('#kingdom-name').fill('Les Aulnes');await page.locator('#king-name').fill('Élyne');
   await page.locator('#preset-ranger').click();await shot(page,'v5-portrait-ranger-desktop');
